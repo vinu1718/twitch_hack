@@ -23,3 +23,32 @@ docker compose up --build -d
 ```
 
 The host port comes from `APP_PORT` in `.env`; `.env.example` defaults to 3000. Stop the service with `docker compose down`. The `data/` and `public/recaps/` folders are bind mounted so runtime state and recap media survive container recreation.
+
+## Build the live stream memory
+
+Set `OPENAI_API_KEY` and `OPENAI_TEXT_MODEL` in your ignored `.env`, then sign in to Twitch on `/dashboard`. Click **Start** to record the microphone in fresh 30 second files. Each completed file is transcribed and saved in `data/memory.json`; chat messages are saved there too. The summary updates every two minutes when new input exists, or immediately with **Summarize now**. The dashboard receives updates from `/api/stream`. Click **Stop** to upload the final partial recording.
+
+The browser must allow microphone access. `localhost` supports this during development; use HTTPS if you serve the dashboard from another host.
+
+## Test EventSub with the Twitch CLI
+
+First, connect your Twitch account from `/dashboard` once so `data/auth.json` exists. The CLI WebSocket mock does not perform OAuth. Stop the running dev server, then use three terminals:
+
+```bash
+# Terminal 1: start Twitch's mock WebSocket and subscription endpoint.
+twitch event websocket start-server
+```
+
+```bash
+# Terminal 2: run this app against the mock endpoint.
+EVENTSUB_WS_URL=ws://127.0.0.1:8080/ws \
+EVENTSUB_SUBSCRIPTIONS_URL=http://127.0.0.1:8080/eventsub/subscriptions \
+npm run dev
+```
+
+```bash
+# Terminal 3: send a simulated incoming raid.
+twitch event trigger channel.raid --transport=websocket
+```
+
+The app should log an active `channel.raid` subscription, then a `Raid from ...` line. Twitch CLI 1.1.24's mock rejects `channel.chat.message` version 1, so it may also log that subscription as rejected; Twitch's live endpoint supports it. To test `!ping` → `pong`, run against Twitch's real endpoints and type `!ping` in your channel chat.
