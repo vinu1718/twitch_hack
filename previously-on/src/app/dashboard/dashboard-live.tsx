@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { StreamSummary } from "@/lib/memory";
 import type { LoreEntry } from "@/lib/lore";
 import type { BriefingEvent, RecapStatus } from "@/lib/recap-types";
@@ -32,6 +32,24 @@ export function DashboardLive({
   const [recapStatus, setRecapStatus] = useState<RecapStatus | null>(null);
   const [micActive, setMicActive] = useState<boolean | null>(null);
   const [tab, setTab] = useState<"memory" | "lore">("memory");
+  const [testOpen, setTestOpen] = useState(false);
+  const testPanel = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    if (!testOpen) return;
+    const closeOutside = (event: PointerEvent) => {
+      if (
+        event.target instanceof Node &&
+        !testPanel.current?.contains(event.target)
+      )
+        setTestOpen(false);
+    };
+    document.addEventListener("pointerdown", closeOutside);
+    return () => document.removeEventListener("pointerdown", closeOutside);
+  }, [testOpen]);
+  function closeTest() {
+    setTestOpen(false);
+    testPanel.current?.querySelector("summary")?.focus({ preventScroll: true });
+  }
   const { health, offline } = useHealth();
   const recording = micActive ?? health?.micRecording ?? false;
   useEffect(() => {
@@ -216,11 +234,7 @@ export function DashboardLive({
         </AnimatedContent>
       )}
       <div className="dashboard-workspace">
-        <aside
-          className="dashboard-left scroll-region"
-          aria-label="Stream controls"
-          tabIndex={0}
-        >
+        <aside className="dashboard-left" aria-label="Stream controls">
           {login ? (
             <MicRecorder onCaptureChange={setMicActive} />
           ) : (
@@ -288,7 +302,7 @@ export function DashboardLive({
         </section>
       </div>
       <footer className="dashboard-tools">
-        <details className="tool-disclosure">
+        <details className="tool-disclosure" name="dashboard-tools">
           <summary>
             Memory &amp; lore{" "}
             <span className="muted">
@@ -376,13 +390,36 @@ export function DashboardLive({
             )}
           </div>
         </details>
-        <details className="tool-disclosure">
+        <details
+          className="tool-disclosure test-disclosure"
+          name="dashboard-tools"
+          ref={testPanel}
+          open={testOpen}
+          onToggle={(event) => setTestOpen(event.currentTarget.open)}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              event.preventDefault();
+              closeTest();
+            }
+          }}
+        >
           <summary>Test</summary>
           <div className="tool-content">
-            <RaidControls disabled={!login} />
+            <div className="test-popover-heading">
+              <strong>Test a raid</strong>
+              <button
+                className="button-quiet"
+                type="button"
+                aria-label="Close raid test"
+                onClick={closeTest}
+              >
+                ×
+              </button>
+            </div>
+            <RaidControls disabled={!login} onSimulated={closeTest} />
           </div>
         </details>
-        <details className="tool-disclosure">
+        <details className="tool-disclosure" name="dashboard-tools">
           <summary>Details</summary>
           <div
             className="tool-content scroll-region"

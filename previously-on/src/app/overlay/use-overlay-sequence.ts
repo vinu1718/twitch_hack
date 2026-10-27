@@ -4,6 +4,16 @@ import { animate, createTimeline } from "animejs";
 import type { RecapEvent, WelcomeEvent } from "@/lib/recap-types";
 export type OverlayPhase = "title" | "story" | "welcome" | "out";
 
+export function narrationPlaybackRate(
+  duration: number,
+  story: boolean,
+): number {
+  if (!Number.isFinite(duration) || duration <= 0) return 1;
+  return story
+    ? Math.max(1, duration / 14)
+    : Math.min(1.15, Math.max(1, duration / 4));
+}
+
 export function useOverlaySequence(
   recap: RecapEvent | null,
   welcomes: RefObject<Map<string, WelcomeEvent>>,
@@ -114,9 +124,9 @@ export function useOverlaySequence(
       await new Promise<void>((resolve) => {
         const rate = () => {
           if (Number.isFinite(element.duration) && element.duration > 0)
-            element.playbackRate = Math.max(
-              1,
-              element.duration / (track ? 14 : 2),
+            element.playbackRate = narrationPlaybackRate(
+              element.duration,
+              track,
             );
         };
         const update = () => {

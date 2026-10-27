@@ -72,3 +72,13 @@ Contrast spot checks (normal text, target ≥4.5:1): white/purple 4.64; white/ho
 Removed status-card entrance fades so all three cards are present in server HTML before the health poll, with neutral Checking states. Added server-render regression coverage. The last successful summary timestamp is now saved alongside the summary and restored to health on startup; no API shape changes. Restart, no-op, failed-run, legacy-file, and invalid-optional-timestamp cases are tested. Legacy summaries retain their content and show “Saved summary” until a successful run records an actual timestamp.
 
 Screenshots: [landing](design-review/twitch-landing.png), [dark dashboard](design-review/twitch-dashboard-dark.png), [light dashboard](design-review/twitch-dashboard-light.png), [overlay preview](design-review/twitch-overlay-preview.png).
+
+## Welcome voice and simulation follow-up
+
+Fixed stale recap methods retained by the development singleton after source reloads. Its methods now update without recreating listeners or losing the active raid, standby, or queue. A regression test keeps an active raid and a queued raid across a simulated reload and verifies that the next welcome uses the updated narrator. Both main and welcome requests are tested to use `shimmer` with soft, light, feminine delivery instructions.
+
+Tested the actual Simulate raid button using the connected channel login. Observed a main recap and matching welcome over SSE, downloaded the generated welcome MP3, and checked that it decodes. The welcome sample is kept locally under ignored `data/welcome-voice-check.mp3`; it is not committed. This verifies generation and routing, not a subjective listening assessment.
+
+The Test form is now a small floating panel instead of expanding the footer and squeezing the live controls. It closes after successful submission, supports Escape/outside dismissal, and preserves errors for retry. With a real raid briefing present at 683×827, mic panel height/scrollHeight both measured 335px; memory panel height/scrollHeight both measured 333px. Body height equaled the viewport, the Test form was collapsed, and the mic button was fully visible. [Post-simulation dashboard](design-review/simulated-raid-dashboard.png).
+
+The real generated welcome was 4.704 seconds. The previous two-second fitting rule would play it at 2.352× speed. Welcome fitting now targets four seconds and is capped at 1.15×; a regression test guards the cap. Main story timing and queue behavior are unchanged.

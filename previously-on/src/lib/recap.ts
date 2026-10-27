@@ -180,7 +180,11 @@ class Recaps {
 type RecapGlobal = typeof globalThis & { __previouslyOnRecaps?: Recaps };
 function recaps(): Recaps {
   const global = globalThis as RecapGlobal;
-  return (global.__previouslyOnRecaps ??= new Recaps());
+  const service = (global.__previouslyOnRecaps ??= new Recaps());
+  // Dev reloads retain singleton state and listeners. Update methods as well, so
+  // welcomes use the current narrator rather than a captured pre-reload module.
+  if (Object.getPrototypeOf(service) !== Recaps.prototype) Object.setPrototypeOf(service, Recaps.prototype);
+  return service;
 }
 export function startRecaps(): void {
   const service = recaps();

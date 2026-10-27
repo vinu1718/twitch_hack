@@ -1,6 +1,12 @@
 "use client";
 import { useState } from "react";
-export function RaidControls({ disabled = false }: { disabled?: boolean }) {
+export function RaidControls({
+  disabled = false,
+  onSimulated,
+}: {
+  disabled?: boolean;
+  onSimulated?: () => void;
+}) {
   const [login, setLogin] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -19,6 +25,7 @@ export function RaidControls({ disabled = false }: { disabled?: boolean }) {
       const result = (await response.json()) as { error?: string };
       if (!response.ok) throw new Error(result.error || "Simulation failed");
       setMessage("Raid queued · 42 simulated viewers. Watch the overlay.");
+      onSimulated?.();
     } catch (error) {
       setFailed(true);
       setMessage(error instanceof Error ? error.message : "Simulation failed");

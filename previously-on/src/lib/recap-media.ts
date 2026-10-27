@@ -5,13 +5,14 @@ import { openai } from "@/lib/openai";
 
 const DIRECTORY = path.join(process.cwd(), "data", "recaps");
 export const mediaId = /^[a-f0-9-]{36}\.mp3$/;
+export const NARRATOR_VOICE = "shimmer" as const;
 
 export async function narrate(text: string, welcome = false, id = `${randomUUID()}.mp3`): Promise<string> {
   const response = await openai().audio.speech.create({
-    model: "gpt-4o-mini-tts", voice: "shimmer", input: text, response_format: "mp3",
+    model: "gpt-4o-mini-tts", voice: NARRATOR_VOICE, input: text, response_format: "mp3",
     instructions: welcome
-      ? "Soft, warm, friendly delivery. A gentle smile in your voice, relaxed and welcoming. Keep the volume and energy even. No booming announcer voice or exaggerated drama. Read only the provided words."
-      : "Soft, warm, light storytelling voice, like a friend catching someone up. Speak clearly at a natural conversational pace, with gentle expression and brief pauses. Let the humor feel understated. No deep booming register, trailer-announcer delivery, shouting, or forced urgency. Aim for about fifteen seconds. Read only the provided words.",
+      ? "Use a soft, light, feminine voice with a warm, gentle smile. Relaxed, friendly and welcoming, with clear natural diction. Keep the volume and energy even. No deep register, booming announcer voice or exaggerated drama. Read only the provided words."
+      : "Use a soft, light, feminine storytelling voice, like a friend catching someone up. Speak clearly at a natural conversational pace, with gentle expression and brief pauses. Let the humor feel understated. No deep booming register, trailer-announcer delivery, shouting, or forced urgency. Aim for about fifteen seconds. Read only the provided words.",
   }, { timeout: 30_000, maxRetries: 0 });
   const bytes = Buffer.from(await response.arrayBuffer());
   if (!bytes.length) throw new Error("Narration was empty");
