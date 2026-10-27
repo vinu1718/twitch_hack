@@ -117,7 +117,7 @@ export function DashboardLive({
         </a>
       </header>
       <section className="status-rail" aria-label="Stream status">
-        <AnimatedContent
+        <div
           className={`status-card ${issue ? "is-error" : connected ? "is-good" : "is-off"}`}
         >
           <span className="eyebrow">
@@ -142,25 +142,29 @@ export function DashboardLive({
                 : "Checking connection…")
             )}
           </span>
-        </AnimatedContent>
-        <AnimatedContent
-          delay={50}
-          className={`status-card ${recording ? "is-good" : "is-off"}`}
-        >
+        </div>
+        <div className={`status-card ${recording ? "is-good" : "is-off"}`}>
           <span className="eyebrow">
             <span className="status-dot" /> MICROPHONE
           </span>
-          <strong>{recording ? "Recording" : "Standing by"}</strong>
+          <strong>
+            {!health && micActive === null
+              ? "Checking…"
+              : recording
+                ? "Recording"
+                : "Standing by"}
+          </strong>
           <span>
-            {recording
-              ? health?.lastTranscriptAt
-                ? `Last chunk ${elapsed(health.lastTranscriptAt, now)} ago`
-                : "Waiting for first chunk"
-              : "Mic is off"}
+            {!health && micActive === null
+              ? "Checking microphone…"
+              : recording
+                ? health?.lastTranscriptAt
+                  ? `Last chunk ${elapsed(health.lastTranscriptAt, now)} ago`
+                  : "Waiting for first chunk"
+                : "Mic is off"}
           </span>
-        </AnimatedContent>
-        <AnimatedContent
-          delay={100}
+        </div>
+        <div
           className={`status-card ${ready ? "is-good" : recapStatus?.state === "error" ? "is-warn" : "is-off"}`}
         >
           <span className="eyebrow">
@@ -173,16 +177,18 @@ export function DashboardLive({
                 ? "Preparing…"
                 : recapStatus?.state === "error"
                   ? "Text fallback ready"
-                  : "Standing by"}
+                  : "Checking…"}
           </strong>
           <span>
             {ready
               ? "Ready for the next raid"
               : recapStatus?.state === "error"
                 ? "Your stream story can still play"
-                : "Built from your next stream summary"}
+                : recapStatus
+                  ? "Built from your next stream summary"
+                  : "Checking recap…"}
           </span>
-        </AnimatedContent>
+        </div>
       </section>
       {briefing && (
         <AnimatedContent
@@ -259,7 +265,9 @@ export function DashboardLive({
               <span className="muted">
                 {health?.lastSummaryAt
                   ? `${health.summaryState === "error" ? "Last attempt" : health.summaryState === "running" ? "Started" : "Updated"} ${elapsed(health.lastSummaryAt, now)} ago`
-                  : "No summary run yet"}
+                  : summary.now || summary.moments.length
+                    ? "Saved summary"
+                    : "No summary run yet"}
               </span>
             </div>
             {health?.summaryState === "error" && (

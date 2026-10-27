@@ -269,7 +269,7 @@ export function Landing() {
           » Previously On
         </Link>
         <span>A CODEX × TWITCHCON BUILD</span>
-        <span>LIVE STORIES. SHARED MEMORIES.</span>
+        <span className="affiliation-note">Not affiliated with Twitch</span>
       </footer>
     </div>
   );

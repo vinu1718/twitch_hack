@@ -19,8 +19,8 @@ export function eventSubHealth(connected: boolean, started: number | null = null
 }
 export function noteChat(): void { state.lastChatAt = Date.now(); }
 export function noteTranscript(): void { state.lastTranscriptAt = Date.now(); }
-export function noteSummary(status: "running" | "ok" | "error"): void {
-  if (status === "running") state.lastSummaryAt = Date.now();
+export function noteSummary(status: "running" | "ok" | "error", timestamp = Date.now()): void {
+  if (status === "running" || status === "ok") state.lastSummaryAt = timestamp;
   state.summaryState = status;
 }
 export function microphoneLease(id: string, active: boolean): void {

@@ -13,9 +13,9 @@ export default function HeroGradient() {
         uStrength={2}
         uFrequency={4}
         uDensity={1.3}
-        color1="#dcff52"
-        color2="#45521b"
-        color3="#0c1008"
+        color1="#9146FF"
+        color2="#281747"
+        color3="#0E0E10"
         brightness={0.85}
         grain="off"
         lightType="3d"

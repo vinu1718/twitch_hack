@@ -23,6 +23,7 @@ type MemoryState = {
   transcript: TranscriptLine[];
   chat: ChatLine[];
   summary: StreamSummary;
+  lastSummaryAt?: number | null;
   pendingTranscript: PendingTranscript[];
   pendingChat: PendingChat[];
   nextId: number;
@@ -37,6 +38,7 @@ function emptyState(): MemoryState {
     transcript: [],
     chat: [],
     summary: { now: "", moments: [], jokes: [] },
+    lastSummaryAt: null,
     pendingTranscript: [],
     pendingChat: [],
     nextId: 1,
@@ -122,6 +124,9 @@ class StreamMemory {
 
   private async load(): Promise<void> {
     this.state = await loadSavedState(MEMORY_FILE, validState, emptyState);
+    const savedTime = this.state.lastSummaryAt;
+    this.state.lastSummaryAt = typeof savedTime === "number" && Number.isFinite(savedTime) && savedTime > 0 ? savedTime : null;
+    if (this.state.lastSummaryAt !== null) noteSummary("ok", this.state.lastSummaryAt);
     this.prune();
     await this.persist();
   }
@@ -218,6 +223,7 @@ class StreamMemory {
     const summary = await generateSummary(this.state.summary, transcript, chat);
     await attachMomentClips(this.state.summary, summary);
     this.state.summary = summary;
+    this.state.lastSummaryAt = Date.now();
     this.state.pendingTranscript = this.state.pendingTranscript.filter((line) => line.id > consumedId);
     this.state.pendingChat = this.state.pendingChat.filter((line) => line.id > consumedId);
     await this.persist();
@@ -227,7 +233,7 @@ class StreamMemory {
       console.error("Saving summary jokes to lore failed");
     }
     bus.emit("summary", structuredClone(summary));
-    noteSummary("ok");
+    noteSummary("ok", this.state.lastSummaryAt ?? undefined);
     return { summary: structuredClone(summary), updated: true };
   }
 }

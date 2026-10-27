@@ -67,19 +67,19 @@
 }
 .status-card.is-good > strong,
 .status-card.is-good > .eyebrow {
-  color: var(--good);
+  color: var(--good-text);
 }
 .status-card.is-warn > strong,
 .status-card.is-warn > .eyebrow {
-  color: var(--warning);
+  color: var(--warning-text);
 }
 .status-card.is-error {
-  border-color: var(--danger);
+  border-color: var(--danger-text);
 }
 .status-card.is-error > strong,
 .status-card.is-error > .eyebrow,
 .status-card.is-error > span:last-child {
-  color: var(--danger);
+  color: var(--danger-text);
 }
 .dashboard-workspace {
   display: grid;
@@ -141,18 +141,20 @@
 }
 .stop-button {
   background: var(--surface-raised);
-  border-color: var(--good);
-  color: var(--good);
+  border-color: var(--good-text);
+  color: var(--good-text);
   box-shadow: 0 4px 0 var(--line);
 }
 .stop-button:hover {
+  background: var(--surface-raised);
   box-shadow: 0 5px 0 var(--line);
 }
 .stop-button:active {
+  background: var(--surface-raised);
   box-shadow: 0 1px 0 var(--line);
 }
 :root[data-theme="light"] .mic-button.stop-button {
-  color: var(--good);
+  color: var(--good-text);
 }
 .mic-status {
   font-size: 12px;
@@ -192,13 +194,13 @@
 }
 .feedback.error,
 .tone-error {
-  color: var(--danger);
+  color: var(--danger-text);
 }
 .tone-good {
-  color: var(--good);
+  color: var(--good-text);
 }
 .tone-warn {
-  color: var(--warning);
+  color: var(--warning-text);
 }
 .fine-print,
 .tiny-label {
@@ -305,7 +307,7 @@
   font-size: 11px;
 }
 .clip-badge {
-  color: var(--accent);
+  color: var(--accent-text);
   font-size: 10px;
   margin-left: auto;
 }
@@ -403,17 +405,17 @@
   align-items: center;
   gap: 20px;
   padding: 16px 20px;
-  border: 1px solid #dcff5277;
-  background: #232b13;
+  border: 1px solid var(--accent);
+  background: var(--accent-soft);
   border-radius: var(--radius);
   flex-shrink: 0;
 }
 .briefing-icon {
-  color: var(--accent);
+  color: var(--accent-text);
   font-size: 35px;
 }
 .raid-briefing .eyebrow {
-  color: var(--accent);
+  color: var(--accent-text);
   font-size: 9px;
 }
 .raid-briefing h2 {
@@ -430,7 +432,7 @@
 }
 .raid-briefing p {
   margin: 0;
-  color: #d5dec6;
+  color: var(--text);
   font-size: 12px;
 }
 .lore-intro h2 {
@@ -481,7 +483,7 @@
   resize: vertical;
 }
 .delete-button {
-  color: var(--danger);
+  color: var(--danger-text);
 }
 .connect-panel h2 {
   font-size: 24px;

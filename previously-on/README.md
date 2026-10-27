@@ -76,7 +76,7 @@ Run `npm test`, `npm run lint`, and `npx tsc --noEmit` for local checks. Restart
 
 ## Interface and motion
 
-`/` is the four-part demo opener: arrival, memory, raid, and chat commands. Anton and Geist are served locally through `next/font`; shared colors, spacing, focus styles, and tactile controls live in `src/app/globals.css`. The acid yellow accent is shared across all three pages.
+`/` is the four-part demo opener: arrival, memory, raid, and chat commands. Inter is served locally through `next/font`; Anton is reserved for the overlay title and raider name; shared colors, spacing, focus styles, and tactile controls live in `src/app/globals.css`. The Twitch-purple accent is shared across all three pages; this independent project is not affiliated with Twitch.
 
 The overlay uses one anime.js v4 timeline, scrubbed by audio progress during the story. Subtitles are 46px on the native 1920×1080 canvas. The story and welcome panels stay left of the gameplay center. Main narration is fitted into a 14 second story window and welcome audio into two seconds with pitch-preserving browser playback; ordinary playback is about 18 seconds, or about 21 seconds with the full late-welcome wait. Browser autoplay permission and unavailable media can delay playback. When idle, no recap subtree, iframe, canvas, or animation is mounted.
 
@@ -100,3 +100,5 @@ The dashboard's default view is three status cards, microphone capture, and **Ri
 In a regular browser, the idle overlay shows a **Play preview** button. `/overlay?preview` starts the same preview automatically; autoplay restrictions may require the audio-enable button. The preview reads `GET /api/recaps/standby`, uses existing narration when available or text cards from current memory, and welcomes a sample raider. It generates no new audio, sends no chat, emits no raid, and does not enter or acknowledge the server raid queue. A real raid interrupts a local preview. In OBS (`window.obsstudio` is defined), the idle hint is absent and the source stays transparent.
 
 Narration uses the `shimmer` voice on `gpt-4o-mini-tts`, with soft, warm storytelling and welcome instructions. Preview and live raids share the prepared narrator audio; playing a preview never generates new speech. If an overlay tab already has an older preview loaded, play the preview again to load the refreshed audio. See [OpenAI's voice options](https://developers.openai.com/api/docs/guides/text-to-speech#voice-options).
+
+The last successful summary time is stored as `lastSummaryAt` in `data/memory.json` and restored into health on startup. Older memory files without a timestamp retain their summary and display “Saved summary” until the next successful update; no timestamp is guessed. All three dashboard status cards render immediately with neutral checking labels before health data arrives.

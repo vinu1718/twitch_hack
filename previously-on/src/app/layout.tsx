@@ -8,7 +8,7 @@ const display = localFont({
   display: "swap",
 });
 const ui = localFont({
-  src: "./fonts/Geist-Variable.ttf",
+  src: "./fonts/Inter-Variable.ttf",
   variable: "--font-ui",
   display: "swap",
   weight: "100 900",

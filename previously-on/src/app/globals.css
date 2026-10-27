@@ -3,18 +3,35 @@
 :root,
 .broadcast-root,
 .landing-preview {
-  --ink: #090a09;
-  --surface: #121411;
-  --surface-raised: #1b1e19;
-  --line: #34392f;
-  --text: #f3f3e9;
-  --muted: #a9b09f;
-  --accent: #dcff52;
-  --accent-fill: #dcff52;
-  --accent-ink: #171e00;
-  --good: #aee6b7;
-  --warning: #ffd08a;
-  --danger: #ffaaa2;
+  --ink: #0e0e10;
+  --surface: #18181b;
+  --surface-raised: #1f1f23;
+  --line: #2f2f35;
+  --text: #efeff1;
+  --muted: #adadb8;
+  --accent: #9146ff;
+  --accent-fill: #9146ff;
+  --accent-hover: #772ce8;
+  --accent-pressed: #5c16c5;
+  --accent-soft: rgba(145, 70, 255, 0.15);
+  --accent-text: #bf94ff;
+  --accent-deep: #281747;
+  --good-text: #00f593;
+  --warning-text: #ffd37a;
+  --danger-text: #ff8080;
+  --broadcast-backdrop: rgba(14, 14, 16, 0.96);
+  --foil-gradient: linear-gradient(
+    135deg,
+    #772ce8,
+    #281747 35%,
+    #5c16c5 50%,
+    #1f1f23 75%,
+    #772ce8
+  );
+  --accent-ink: #ffffff;
+  --good: #00f593;
+  --warning: #ffd37a;
+  --danger: #eb0400;
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -31,16 +48,16 @@
 }
 :root[data-theme="light"] {
   color-scheme: light;
-  --ink: #f5f6ee;
+  --ink: #f7f7f8;
   --surface: #ffffff;
-  --surface-raised: #e9eddf;
-  --line: #c4cbb9;
-  --text: #191e14;
-  --muted: #536049;
-  --accent: #486200;
-  --good: #226039;
-  --warning: #825000;
-  --danger: #a42828;
+  --surface-raised: #efeff1;
+  --line: #e5e5ea;
+  --text: #0e0e10;
+  --muted: #53535f;
+  --accent-text: #772ce8;
+  --good-text: #007a49;
+  --warning-text: #805600;
+  --danger-text: #c90000;
 }
 /* Broadcast art stays dark and the OBS page stays transparent in either UI theme. */
 html:has(.broadcast-root) {
@@ -62,38 +79,10 @@ html:has(.broadcast-root) {
   font-size: 17px;
   line-height: 1;
 }
-:root[data-theme="light"] .brand-mark {
-  background: var(--accent-fill);
-  color: var(--accent-ink);
-}
-:root[data-theme="light"] .arrival-ticket {
-  background: var(--accent-fill);
-  color: var(--accent-ink);
-}
-:root[data-theme="light"] .foil-slot {
-  color: var(--accent-ink);
-}
-:root[data-theme="light"] .button-quiet:hover {
-  background: #dce3cd;
-  border-color: #707e5f;
-}
 :root[data-theme="light"] .status-card.is-off > strong,
 :root[data-theme="light"] .health-rows dd,
 :root[data-theme="light"] .raid-briefing p {
   color: var(--text);
-}
-:root[data-theme="light"] .status-card.is-good {
-  border-color: #749e7c;
-}
-:root[data-theme="light"] .status-card.is-recording {
-  border-color: #7b943b;
-}
-:root[data-theme="light"] .status-card.is-warn {
-  border-color: #b89461;
-}
-:root[data-theme="light"] .raid-briefing {
-  background: #eaf0d8;
-  border-color: #7b943b;
 }
 @media (max-width: 1000px) {
   .site-nav .nav-note {
@@ -164,11 +153,11 @@ a {
 }
 ::selection {
   background: var(--accent);
-  color: var(--ink);
+  color: var(--accent-ink);
 }
 .display {
-  font-family: var(--font-display), Impact, sans-serif;
-  font-weight: 400;
+  font-family: var(--font-ui), sans-serif;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: -0.025em;
 }
@@ -183,7 +172,7 @@ a {
   color: var(--muted);
 }
 .accent {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 .split-word {
   display: inline-block;
@@ -203,7 +192,7 @@ a {
   place-items: center;
   width: 30px;
   height: 30px;
-  color: var(--ink);
+  color: var(--accent-ink);
   background: var(--accent);
   font-weight: 900;
   font-size: 22px;
@@ -217,14 +206,14 @@ a {
   justify-content: center;
   gap: var(--space-3);
   min-height: 46px;
-  border: 1px solid #eeff97;
+  border: 1px solid var(--accent);
   border-radius: 8px;
   padding: 12px 20px;
-  background: linear-gradient(#e8ff83, var(--accent-fill));
+  background: var(--accent-fill);
   color: var(--accent-ink);
   box-shadow:
-    0 4px 0 #687b22,
-    inset 0 1px 0 #ffffffb0;
+    0 4px 0 var(--accent-pressed),
+    inset 0 1px 0 #ffffff20;
   font-weight: 750;
   font-size: 13px;
   text-decoration: none;
@@ -234,16 +223,17 @@ a {
     filter 150ms;
 }
 .tactile:hover {
-  filter: brightness(1.08);
+  background: var(--accent-hover);
   transform: translateY(-1px);
   box-shadow:
-    0 5px 0 #687b22,
-    inset 0 1px 0 #ffffffb0;
+    0 5px 0 var(--accent-pressed),
+    inset 0 1px 0 #ffffff20;
 }
 .tactile:active {
+  background: var(--accent-pressed);
   transform: translateY(3px);
   box-shadow:
-    0 1px 0 #687b22,
+    0 1px 0 var(--accent-pressed),
     inset 0 1px 2px #0002;
 }
 .button-quiet {
@@ -265,8 +255,8 @@ a {
     border-color 150ms;
 }
 .button-quiet:hover {
-  background: #282d23;
-  border-color: #717b61;
+  background: var(--surface);
+  border-color: var(--accent-text);
 }
 .status-dot {
   display: inline-block;
