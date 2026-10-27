@@ -1,6 +1,6 @@
 import { bus, type ChatEvent, type RaidEvent } from "@/lib/bus";
 import { getAccessToken, helix, readAuth } from "./auth";
-import { sendChat } from "./chat";
+import { startChatCommands } from "@/lib/commands";
 
 type Session = {
   id?: string;
@@ -44,10 +44,6 @@ class EventSubClient {
   private readonly seen = new Map<string, number>();
 
   constructor() {
-    bus.on("chat", (event) => {
-      if (event.text.trim().toLowerCase() !== "!ping") return;
-      void sendChat("pong").catch(() => console.error("Twitch !ping reply failed"));
-    });
     bus.on("raid", (event) => {
       console.info(`Raid from ${event.fromBroadcasterLogin} with ${event.viewers} viewers`);
     });
@@ -358,6 +354,7 @@ const eventSubGlobal = globalThis as EventSubGlobal;
 export async function startEventSub(): Promise<boolean> {
   const auth = await readAuth();
   if (!auth) return false;
+  startChatCommands();
   const client = (eventSubGlobal.__previouslyOnEventSub ??= new EventSubClient());
   await client.start(auth.user_id);
   return true;

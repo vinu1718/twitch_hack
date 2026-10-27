@@ -30,6 +30,12 @@ Set `OPENAI_API_KEY` and `OPENAI_TEXT_MODEL` in your ignored `.env`, then sign i
 
 The browser must allow microphone access. `localhost` supports this during development; use HTTPS if you serve the dashboard from another host.
 
+## Chat commands and channel lore
+
+Viewers can type `!catchup` for a short recap of the last 30 minutes or `!lore <term>` for an inside joke. `!lore` on its own lists up to five saved terms. Replies are plain text. Each user has a 20 second cooldown per command, and the bot spaces all replies by at least three seconds. Catch-up answers are shared for 60 seconds so a burst of requests uses one model response.
+
+Jokes from stream summaries are kept in `data/lore.json` across streams. Edit or delete entries in **Saved lore** on `/dashboard`; manual corrections are preserved when new summaries arrive, and deleted terms are not recreated automatically.
+
 ## Test EventSub with the Twitch CLI
 
 First, connect your Twitch account from `/dashboard` once so `data/auth.json` exists. The CLI WebSocket mock does not perform OAuth. Stop the running dev server, then use three terminals:

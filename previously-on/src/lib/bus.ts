@@ -1,5 +1,6 @@
 import { EventEmitter } from "node:events";
 import type { StreamSummary } from "@/lib/memory";
+import type { LoreEntry } from "@/lib/lore";
 
 export type ChatEvent = {
   broadcasterUserId: string;
@@ -22,6 +23,7 @@ type Events = {
   summary: StreamSummary;
   recap: { text: string };
   briefing: { text: string };
+  lore: LoreEntry[];
 };
 
 class TypedBus {

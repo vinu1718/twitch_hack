@@ -1,5 +1,6 @@
 import { readAuth } from "@/lib/twitch/auth";
 import { getSummary } from "@/lib/memory";
+import { getLore } from "@/lib/lore";
 import { DashboardLive } from "./dashboard-live";
 
 export const dynamic = "force-dynamic";
@@ -7,6 +8,7 @@ export const dynamic = "force-dynamic";
 export default async function DashboardPage() {
   const auth = await readAuth();
   const summary = await getSummary();
+  const lore = await getLore();
   return (
     <main className="min-h-screen bg-slate-950 px-6 py-10 text-slate-100">
       <div className="mx-auto max-w-5xl space-y-8">
@@ -26,7 +28,7 @@ export default async function DashboardPage() {
           </a>
         )}
         </header>
-        {auth && <DashboardLive initialSummary={summary} />}
+        {auth && <DashboardLive initialSummary={summary} initialLore={lore} />}
       </div>
     </main>
   );

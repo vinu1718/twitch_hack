@@ -3,6 +3,7 @@ import { mkdir, readFile, rename, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { bus, type ChatEvent } from "@/lib/bus";
 import { generateSummary } from "@/lib/summary";
+import { mergeJokes } from "@/lib/lore";
 
 export type TranscriptLine = { t: string; text: string };
 export type ChatLine = { t: string; user: string; text: string };
@@ -11,6 +12,7 @@ export type StreamSummary = {
   moments: Array<{ t: string; title: string; detail: string; clipId?: string }>;
   jokes: Array<{ term: string; explanation: string; firstSeen: string; clipId?: string }>;
 };
+export type MemoryContext = { summary: StreamSummary; transcript: TranscriptLine[]; chat: ChatLine[] };
 
 type PendingTranscript = TranscriptLine & { id: number };
 type PendingChat = ChatLine & { id: number };
@@ -179,6 +181,17 @@ class StreamMemory {
     return structuredClone(this.state.summary);
   }
 
+  async getContext(minutes: number): Promise<MemoryContext> {
+    await this.ready;
+    if (this.prune()) await this.persist();
+    const since = Date.now() - minutes * 60_000;
+    return structuredClone({
+      summary: this.state.summary,
+      transcript: this.state.transcript.filter((line) => Date.parse(line.t) >= since),
+      chat: this.state.chat.filter((line) => Date.parse(line.t) >= since),
+    });
+  }
+
   async summarizeNow(): Promise<{ summary: StreamSummary; updated: boolean }> {
     await this.ready;
     if (this.summaryRun) return this.summaryRun;
@@ -203,6 +216,11 @@ class StreamMemory {
     this.state.pendingTranscript = this.state.pendingTranscript.filter((line) => line.id > consumedId);
     this.state.pendingChat = this.state.pendingChat.filter((line) => line.id > consumedId);
     await this.persist();
+    try {
+      await mergeJokes(summary.jokes);
+    } catch {
+      console.error("Saving summary jokes to lore failed");
+    }
     bus.emit("summary", structuredClone(summary));
     return { summary: structuredClone(summary), updated: true };
   }
@@ -225,6 +243,10 @@ export async function addTranscript(text: string): Promise<void> {
 
 export async function getSummary(): Promise<StreamSummary> {
   return memory().getSummary();
+}
+
+export async function getMemoryContext(minutes: number): Promise<MemoryContext> {
+  return memory().getContext(minutes);
 }
 
 export async function summarizeNow(): Promise<{ summary: StreamSummary; updated: boolean }> {

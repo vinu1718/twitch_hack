@@ -1,9 +1,11 @@
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
 
-  const { startMemory } = await import("./lib/memory");
+  const { startMemory, getSummary } = await import("./lib/memory");
   try {
     await startMemory();
+    const { mergeJokes } = await import("./lib/lore");
+    await mergeJokes((await getSummary()).jokes);
   } catch {
     console.error("Stream memory startup failed");
   }

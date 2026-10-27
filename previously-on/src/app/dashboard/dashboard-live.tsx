@@ -2,10 +2,13 @@
 
 import { useEffect, useState } from "react";
 import type { StreamSummary } from "@/lib/memory";
+import type { LoreEntry } from "@/lib/lore";
 import { MicRecorder } from "./mic-recorder";
+import { LoreEditor } from "./lore-editor";
 
-export function DashboardLive({ initialSummary }: { initialSummary: StreamSummary }) {
+export function DashboardLive({ initialSummary, initialLore }: { initialSummary: StreamSummary; initialLore: LoreEntry[] }) {
   const [summary, setSummary] = useState(initialSummary);
+  const [lore, setLore] = useState(initialLore);
   const [summarizing, setSummarizing] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -15,8 +18,13 @@ export function DashboardLive({ initialSummary }: { initialSummary: StreamSummar
       try { setSummary(JSON.parse(event.data) as StreamSummary); } catch { /* ignore malformed event */ }
     };
     source.addEventListener("summary", onSummary);
+    const onLore = (event: MessageEvent) => {
+      try { setLore(JSON.parse(event.data) as LoreEntry[]); } catch { /* ignore malformed event */ }
+    };
+    source.addEventListener("lore", onLore);
     return () => {
       source.removeEventListener("summary", onSummary);
+      source.removeEventListener("lore", onLore);
       source.close();
     };
   }, []);
@@ -84,6 +92,7 @@ export function DashboardLive({ initialSummary }: { initialSummary: StreamSummar
           ) : <p className="mt-4 text-sm text-slate-400">Recurring bits will appear here.</p>}
         </section>
       </div>
+      <LoreEditor entries={lore} onChange={setLore} />
     </div>
   );
 }
