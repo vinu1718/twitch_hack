@@ -1,6 +1,8 @@
 @import "tailwindcss";
 
-:root {
+:root,
+.broadcast-root,
+.landing-preview {
   --ink: #090a09;
   --surface: #121411;
   --surface-raised: #1b1e19;
@@ -8,6 +10,7 @@
   --text: #f3f3e9;
   --muted: #a9b09f;
   --accent: #dcff52;
+  --accent-fill: #dcff52;
   --accent-ink: #171e00;
   --good: #aee6b7;
   --warning: #ffd08a;
@@ -22,6 +25,98 @@
   --space-8: 64px;
   --radius: 12px;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+:root {
+  color-scheme: dark;
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --ink: #f5f6ee;
+  --surface: #ffffff;
+  --surface-raised: #e9eddf;
+  --line: #c4cbb9;
+  --text: #191e14;
+  --muted: #536049;
+  --accent: #486200;
+  --good: #226039;
+  --warning: #825000;
+  --danger: #a42828;
+}
+/* Broadcast art stays dark and the OBS page stays transparent in either UI theme. */
+html:has(.broadcast-root) {
+  color-scheme: normal;
+}
+.landing-preview {
+  color-scheme: dark;
+}
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.theme-toggle {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.theme-toggle > span:first-child {
+  font-size: 17px;
+  line-height: 1;
+}
+:root[data-theme="light"] .brand-mark {
+  background: var(--accent-fill);
+  color: var(--accent-ink);
+}
+:root[data-theme="light"] .arrival-ticket {
+  background: var(--accent-fill);
+  color: var(--accent-ink);
+}
+:root[data-theme="light"] .foil-slot {
+  color: var(--accent-ink);
+}
+:root[data-theme="light"] .button-quiet:hover {
+  background: #dce3cd;
+  border-color: #707e5f;
+}
+:root[data-theme="light"] .status-card.is-off > strong,
+:root[data-theme="light"] .health-rows dd,
+:root[data-theme="light"] .raid-briefing p {
+  color: var(--text);
+}
+:root[data-theme="light"] .status-card.is-good {
+  border-color: #749e7c;
+}
+:root[data-theme="light"] .status-card.is-recording {
+  border-color: #7b943b;
+}
+:root[data-theme="light"] .status-card.is-warn {
+  border-color: #b89461;
+}
+:root[data-theme="light"] .raid-briefing {
+  background: #eaf0d8;
+  border-color: #7b943b;
+}
+:root[data-theme="light"] .mic-button.stop-button {
+  color: var(--accent-fill);
+}
+@media (max-width: 1000px) {
+  .site-nav .nav-note {
+    display: none;
+  }
+}
+@media (max-width: 600px) {
+  .theme-toggle > span:last-child {
+    display: none;
+  }
+  .theme-toggle {
+    min-width: 40px;
+    padding: 10px;
+  }
+  .nav-actions {
+    gap: 8px;
+  }
+  .dashboard-nav .channel-chip {
+    display: none;
+  }
 }
 @theme inline {
   --color-ink: var(--ink);
@@ -128,7 +223,7 @@ a {
   border: 1px solid #eeff97;
   border-radius: 8px;
   padding: 12px 20px;
-  background: linear-gradient(#e8ff83, var(--accent));
+  background: linear-gradient(#e8ff83, var(--accent-fill));
   color: var(--accent-ink);
   box-shadow:
     0 4px 0 #687b22,

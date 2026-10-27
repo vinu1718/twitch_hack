@@ -88,3 +88,7 @@ Optional authored assets can replace the static identity treatments on the landi
 - `NEXT_PUBLIC_UNICORN_PROJECT_ID`: a real published Unicorn Studio project ID.
 
 Leave these unset for the designed static fallbacks. These public variables are baked into the client build, so rebuild after changing them. No editor assets are fabricated. See [DESIGN_REVIEW.md](DESIGN_REVIEW.md) for screenshots and review evidence.
+
+### Light and dark mode
+
+Use the theme button in the landing page or dashboard header. The first visit follows your system preference; an explicit choice is saved in this browser and synchronized across tabs. Preference loading runs before paint to avoid a theme flash. The OBS overlay and landing's broadcast preview retain their dark broadcast palette; the idle overlay remains fully transparent in either mode.

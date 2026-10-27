@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { animate, onScroll, stagger } from "animejs";
@@ -70,9 +71,12 @@ export function Landing() {
           <span className="brand-mark">»</span> Previously On
         </Link>
         <span className="eyebrow nav-note">THE STREAM HAS A STORY.</span>
-        <a className="button-quiet" href="/dashboard">
-          Enter the control room <span aria-hidden="true">↗</span>
-        </a>
+        <div className="nav-actions">
+          <ThemeToggle />
+          <a className="button-quiet" href="/dashboard">
+            Enter the control room <span aria-hidden="true">↗</span>
+          </a>
+        </div>
       </nav>
       <main>
         <section id="problem" className="story-section hero-section" ref={hero}>

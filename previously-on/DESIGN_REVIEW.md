@@ -48,3 +48,9 @@ Still validate actual narrator delivery, clip loading, and frame pacing inside t
 Visual references: [basement.studio](https://basement.studio/) and [Dqnamo Kitchen](https://www.dqnamo.com/kitchen). No code or assets were copied from either.
 
 Documentation checked before integration: [anime.js timeline](https://animejs.com/documentation/timeline/), [onScroll](https://animejs.com/documentation/events/onscroll/), [React Bits installation](https://reactbits.dev/get-started/installation), [ShaderGradient](https://github.com/ruucm/shadergradient), [Lenis](https://github.com/darkroomengineering/lenis), [Rive React](https://rive.app/docs/runtimes/react/react), and [Unicorn Studio SDK](https://github.com/hiunicornstudio/unicornstudio.js). React Bits source provenance and the focused anime.js adaptations are in `src/components/REACT_BITS.md`.
+
+## Light mode follow-up
+
+Added a shared, labeled theme control to both headers, with a system default, persistent browser preference, cross-tab synchronization, and pre-paint initialization. Light mode uses warm white surfaces, dark ink, accessible olive accent text, and the original yellow button fills. Status and telemetry colors are adjusted for light surfaces. The overlay retains its dark tokens and transparent background regardless of UI theme.
+
+Reviewed [light dashboard](design-review/dashboard-light.png) and [light landing](design-review/landing-light.png), verified reload persistence and cross-tab switching, and inspected the idle overlay in light mode: transparent background, original dark ink/white text tokens, and zero canvases.

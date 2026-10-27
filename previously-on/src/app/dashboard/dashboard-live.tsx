@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { useEffect, useState } from "react";
 import type { StreamSummary } from "@/lib/memory";
 import type { LoreEntry } from "@/lib/lore";
@@ -96,9 +97,12 @@ export function DashboardLive({
           <span className="brand-mark">»</span> Previously On
         </Link>
         <span className="eyebrow muted">CONTROL ROOM</span>
-        <div className="channel-chip">
-          <span className="status-dot" />
-          {login ? `@${login}` : "No channel connected"}
+        <div className="nav-actions">
+          <ThemeToggle />
+          <div className="channel-chip">
+            <span className="status-dot" />
+            {login ? `@${login}` : "No channel connected"}
+          </div>
         </div>
       </header>
       <div className="dashboard-headline">
