@@ -29,7 +29,6 @@ class ChatCommands {
   }
 
   private onChat(event: ChatEvent): void {
-    if (event.chatterUserId === event.broadcasterUserId) return;
     const command = parseCommand(event.text);
     if (!command) return;
     const now = Date.now();
@@ -101,7 +100,7 @@ class ChatCommands {
 
   private enqueue(answer: Promise<string>): void {
     const next = this.sendQueue.catch(() => undefined).then(async () => {
-      const message = plainText(await answer, 500);
+      const message = plainText(await answer, 500).replace(/^(?:!\s*)+/, "").trim();
       if (!message) return;
       const wait = this.sentAt + GLOBAL_COOLDOWN_MS - Date.now();
       if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait));
