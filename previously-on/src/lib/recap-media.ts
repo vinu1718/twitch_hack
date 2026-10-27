@@ -8,10 +8,10 @@ export const mediaId = /^[a-f0-9-]{36}\.mp3$/;
 
 export async function narrate(text: string, welcome = false, id = `${randomUUID()}.mp3`): Promise<string> {
   const response = await openai().audio.speech.create({
-    model: "gpt-4o-mini-tts", voice: "onyx", input: text, response_format: "mp3",
+    model: "gpt-4o-mini-tts", voice: "shimmer", input: text, response_format: "mp3",
     instructions: welcome
-      ? "Warm, welcoming TV narrator. Smile in your voice. Deliver this short welcome naturally, with energy."
-      : "Dramatic television season recap narrator. Rich, resonant voice, crisp diction, controlled urgency, cinematic pauses. Build tension, then land the joke with a knowing smile. About fifteen seconds, never overact. Read only the provided words.",
+      ? "Soft, warm, friendly delivery. A gentle smile in your voice, relaxed and welcoming. Keep the volume and energy even. No booming announcer voice or exaggerated drama. Read only the provided words."
+      : "Soft, warm, light storytelling voice, like a friend catching someone up. Speak clearly at a natural conversational pace, with gentle expression and brief pauses. Let the humor feel understated. No deep booming register, trailer-announcer delivery, shouting, or forced urgency. Aim for about fifteen seconds. Read only the provided words.",
   }, { timeout: 30_000, maxRetries: 0 });
   const bytes = Buffer.from(await response.arrayBuffer());
   if (!bytes.length) throw new Error("Narration was empty");
