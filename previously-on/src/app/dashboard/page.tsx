@@ -2,36 +2,22 @@ import { readAuth } from "@/lib/twitch/auth";
 import { getSummary } from "@/lib/memory";
 import { getLore } from "@/lib/lore";
 import { DashboardLive } from "./dashboard-live";
-import { HealthBox } from "./health-box";
-
+import "./dashboard.css";
 export const dynamic = "force-dynamic";
-
 export default async function DashboardPage() {
   const auth = await readAuth();
   const summary = await getSummary();
   const lore = await getLore();
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-10 text-slate-100">
-      <div className="mx-auto max-w-5xl space-y-8">
-        <header className="space-y-3">
-        <p className="text-sm font-semibold uppercase tracking-[0.3em] text-violet-300">
-          Previously On
-        </p>
-        <h1 className="text-4xl font-bold tracking-tight">Streamer dashboard</h1>
-        {auth ? (
-          <p className="text-slate-300">Connected to Twitch as {auth.login}.</p>
-        ) : (
-          <a
-            href="/api/auth/login"
-            className="inline-block rounded-lg bg-violet-400 px-5 py-3 font-semibold text-slate-950"
-          >
-            Connect Twitch
-          </a>
-        )}
-        </header>
-        <HealthBox />
-        {auth && <DashboardLive initialSummary={summary} initialLore={lore} />}
-      </div>
-    </main>
+    <>
+      <a className="skip-link" href="#dashboard-main">
+        Skip to controls
+      </a>
+      <DashboardLive
+        login={auth?.login}
+        initialSummary={summary}
+        initialLore={lore}
+      />
+    </>
   );
 }

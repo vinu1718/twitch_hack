@@ -5,6 +5,8 @@ RUN npm ci --no-audit --no-fund
 
 FROM node:22-bookworm-slim AS builder
 WORKDIR /app
+ARG NEXT_PUBLIC_RIVE_SRC=""
+ARG NEXT_PUBLIC_UNICORN_PROJECT_ID=""
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY . .
 RUN npm run build

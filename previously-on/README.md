@@ -73,3 +73,18 @@ Welcome narration is generated in parallel with recap playback and starts at the
 The **Health** box reports EventSub session age and active subscriptions, last chat/transcript/summary timestamps, recording cadence, and token expiry. Tokens refresh on demand, with one shared refresh for concurrent requests and one retry after a 401. Missing or corrupt memory/lore files start fresh; malformed files are preserved with `.corrupt-<id>` suffixes. Logs exclude credentials and upstream error bodies; development request logs omit OAuth callbacks. See [LIVE_TEST.md](LIVE_TEST.md) for tonight's OBS, second-account raid, and failure checks.
 
 Run `npm test`, `npm run lint`, and `npx tsc --noEmit` for local checks. Restart `npm run dev` after changing the global background services so their singleton listeners use the new code.
+
+## Interface and motion
+
+`/` is the four-part demo opener: arrival, memory, raid, and chat commands. Anton and Geist are served locally through `next/font`; shared colors, spacing, focus styles, and tactile controls live in `src/app/globals.css`. The acid yellow accent is shared across all three pages.
+
+The overlay uses one anime.js v4 timeline, scrubbed by audio progress during the story. Subtitles are 46px on the native 1920×1080 canvas. The story and welcome panels stay left of the gameplay center. Main narration is fitted into a 14 second story window and welcome audio into two seconds with pitch-preserving browser playback; ordinary playback is about 18 seconds, or about 21 seconds with the full late-welcome wait. Browser autoplay permission and unavailable media can delay playback. When idle, no recap subtree, iframe, canvas, or animation is mounted.
+
+ShaderGradient and its Three.js dependencies are dynamically loaded on the landing hero only, and unmounted offscreen. Lenis and scroll-linked motion are also landing-only. Reduced-motion preferences disable the gradient, smooth scroll, scramble, and large translations. React Bits source components are documented in `src/components/REACT_BITS.md`.
+
+Optional authored assets can replace the static identity treatments on the landing page:
+
+- `NEXT_PUBLIC_RIVE_SRC`: URL of a real published `.riv` file.
+- `NEXT_PUBLIC_UNICORN_PROJECT_ID`: a real published Unicorn Studio project ID.
+
+Leave these unset for the designed static fallbacks. These public variables are baked into the client build, so rebuild after changing them. No editor assets are fabricated. See [DESIGN_REVIEW.md](DESIGN_REVIEW.md) for screenshots and review evidence.

@@ -1,6 +1,10 @@
 services:
   app:
-    build: .
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_RIVE_SRC: ${NEXT_PUBLIC_RIVE_SRC:-}
+        NEXT_PUBLIC_UNICORN_PROJECT_ID: ${NEXT_PUBLIC_UNICORN_PROJECT_ID:-}
     env_file: .env
     ports:
       - "${APP_PORT:-3000}:3000"
