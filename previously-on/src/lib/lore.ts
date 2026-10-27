@@ -1,8 +1,9 @@
 import { randomUUID } from "node:crypto";
-import { mkdir, readFile, rename, unlink, writeFile } from "node:fs/promises";
+import { mkdir, rename, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { bus } from "@/lib/bus";
 import type { StreamSummary } from "@/lib/memory";
+import { loadSavedState } from "@/lib/saved-state";
 
 export type LoreEntry = {
   id: string;
@@ -99,13 +100,8 @@ class LoreStore {
   private operations: Promise<void> = Promise.resolve();
 
   private async load(): Promise<void> {
-    try {
-      const parsed: unknown = JSON.parse(await readFile(LORE_FILE, "utf8"));
-      if (!validFile(parsed)) throw new Error("data/lore.json has an invalid shape");
-      this.file = parsed;
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
-    }
+    this.file = await loadSavedState(LORE_FILE, validFile, () => ({ entries: [], dismissedTerms: [] }));
+    await this.save();
   }
 
   private async save(): Promise<void> {

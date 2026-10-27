@@ -1,6 +1,11 @@
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
 
+  const { startClips } = await import("./lib/twitch/clips");
+  startClips();
+  const { startRecaps } = await import("./lib/recap");
+  startRecaps();
+
   const { startMemory, getSummary } = await import("./lib/memory");
   try {
     await startMemory();

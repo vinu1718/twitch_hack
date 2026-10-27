@@ -20,6 +20,15 @@ export function MicRecorder() {
   const recorder = useRef<MediaRecorder | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const uploadTail = useRef<Promise<void>>(Promise.resolve());
+  const recordingId = useRef("");
+
+  function announce(recording: boolean) {
+    recordingId.current ||= crypto.randomUUID();
+    void fetch("/api/mic", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: recordingId.current, recording }), keepalive: !recording,
+      signal: AbortSignal.timeout(5_000),
+    }).catch(() => { /* The lease expires if the tab or server disconnects. */ });
+  }
 
   function stopTracks() {
     stream.current?.getTracks().forEach((track) => track.stop());
@@ -28,6 +37,7 @@ export function MicRecorder() {
 
   function stop() {
     active.current = false;
+    announce(false);
     if (timer.current) clearTimeout(timer.current);
     timer.current = null;
     if (recorder.current?.state === "recording") recorder.current.stop();
@@ -42,7 +52,7 @@ export function MicRecorder() {
       const extension = mimeType.includes("mp4") ? "mp4" : "webm";
       const form = new FormData();
       form.set("audio", blob, `mic-${Date.now()}.${extension}`);
-      const response = await fetch("/api/transcribe", { method: "POST", body: form });
+      const response = await fetch("/api/transcribe", { method: "POST", body: form, signal: AbortSignal.timeout(45_000) });
       if (!response.ok) throw new Error(`Upload failed (HTTP ${response.status})`);
       if (mounted.current) {
         setUpload("ok");
@@ -87,6 +97,7 @@ export function MicRecorder() {
       if (mounted.current) setCapture("recording");
     } catch {
       active.current = false;
+      announce(false);
       stopTracks();
       if (mounted.current) {
         setCapture("idle");
@@ -113,6 +124,7 @@ export function MicRecorder() {
       }
       stream.current = microphone;
       active.current = true;
+      announce(true);
       microphone.getAudioTracks().forEach((track) => { track.onended = stop; });
       recordNext();
     } catch {
@@ -124,7 +136,10 @@ export function MicRecorder() {
 
   useEffect(() => {
     mounted.current = true;
+    const heartbeat = setInterval(() => { if (active.current) announce(true); }, 20_000);
     return () => {
+      clearInterval(heartbeat);
+      announce(false);
       mounted.current = false;
       active.current = false;
       if (timer.current) clearTimeout(timer.current);

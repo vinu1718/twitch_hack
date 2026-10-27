@@ -113,7 +113,7 @@ export async function generateSummary(
         schema: SUMMARY_SCHEMA,
       },
     },
-  });
+  }, { timeout: 25_000, maxRetries: 0 });
   if (response.status !== "completed" || !response.output_text) {
     throw new Error("OpenAI did not return a completed summary");
   }

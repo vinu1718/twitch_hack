@@ -1,6 +1,7 @@
 import { EventEmitter } from "node:events";
 import type { StreamSummary } from "@/lib/memory";
 import type { LoreEntry } from "@/lib/lore";
+import type { RecapEvent, WelcomeEvent, BriefingEvent, RecapStatus } from "@/lib/recap-types";
 
 export type ChatEvent = {
   broadcasterUserId: string;
@@ -21,8 +22,10 @@ type Events = {
   chat: ChatEvent;
   raid: RaidEvent;
   summary: StreamSummary;
-  recap: { text: string };
-  briefing: { text: string };
+  recap: RecapEvent;
+  "recap-welcome": WelcomeEvent;
+  "recap-status": RecapStatus;
+  briefing: BriefingEvent;
   lore: LoreEntry[];
 };
 

@@ -1,9 +1,12 @@
 import { randomUUID } from "node:crypto";
-import { mkdir, readFile, rename, unlink, writeFile } from "node:fs/promises";
+import { mkdir, rename, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { bus, type ChatEvent } from "@/lib/bus";
 import { generateSummary } from "@/lib/summary";
 import { mergeJokes } from "@/lib/lore";
+import { attachMomentClips } from "@/lib/twitch/clips";
+import { isMicRecording, noteSummary, noteTranscript } from "@/lib/health";
+import { loadSavedState } from "@/lib/saved-state";
 
 export type TranscriptLine = { t: string; text: string };
 export type ChatLine = { t: string; user: string; text: string };
@@ -98,6 +101,7 @@ class StreamMemory {
   private readonly ready: Promise<void>;
   private writes: Promise<void> = Promise.resolve();
   private summaryRun?: Promise<{ summary: StreamSummary; updated: boolean }>;
+  private lastAttempt = Date.now();
 
   constructor() {
     this.ready = this.load();
@@ -105,8 +109,10 @@ class StreamMemory {
       void this.addChat(event).catch(() => console.error("Saving chat memory failed"));
     });
     const timer = setInterval(() => {
+      if (this.summaryRun || Date.now() - this.lastAttempt < (isMicRecording() ? 60_000 : SUMMARY_INTERVAL_MS)) return;
+      this.lastAttempt = Date.now();
       void this.summarizeNow().catch(() => console.error("Scheduled stream summary failed"));
-    }, SUMMARY_INTERVAL_MS);
+    }, 5_000);
     timer.unref();
   }
 
@@ -115,14 +121,9 @@ class StreamMemory {
   }
 
   private async load(): Promise<void> {
-    try {
-      const parsed: unknown = JSON.parse(await readFile(MEMORY_FILE, "utf8"));
-      if (!validState(parsed)) throw new Error("data/memory.json has an invalid shape");
-      this.state = parsed;
-      if (this.prune()) await this.persist();
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
-    }
+    this.state = await loadSavedState(MEMORY_FILE, validState, emptyState);
+    this.prune();
+    await this.persist();
   }
 
   private prune(): boolean {
@@ -162,6 +163,7 @@ class StreamMemory {
     this.state.pendingTranscript.push({ ...line, id: this.state.nextId++ });
     this.prune();
     await this.persist();
+    noteTranscript();
   }
 
   private async addChat(event: ChatEvent): Promise<void> {
@@ -195,7 +197,8 @@ class StreamMemory {
   async summarizeNow(): Promise<{ summary: StreamSummary; updated: boolean }> {
     await this.ready;
     if (this.summaryRun) return this.summaryRun;
-    const run = this.runSummary();
+    this.lastAttempt = Date.now();
+    const run = this.runSummary().catch((error) => { noteSummary("error"); throw error; });
     this.summaryRun = run;
     try {
       return await run;
@@ -211,7 +214,9 @@ class StreamMemory {
     if (!transcript.length && !chat.length) return { summary: await this.getSummary(), updated: false };
 
     const consumedId = Math.max(transcript.at(-1)?.id ?? 0, chat.at(-1)?.id ?? 0);
+    noteSummary("running");
     const summary = await generateSummary(this.state.summary, transcript, chat);
+    await attachMomentClips(this.state.summary, summary);
     this.state.summary = summary;
     this.state.pendingTranscript = this.state.pendingTranscript.filter((line) => line.id > consumedId);
     this.state.pendingChat = this.state.pendingChat.filter((line) => line.id > consumedId);
@@ -222,6 +227,7 @@ class StreamMemory {
       console.error("Saving summary jokes to lore failed");
     }
     bus.emit("summary", structuredClone(summary));
+    noteSummary("ok");
     return { summary: structuredClone(summary), updated: true };
   }
 }

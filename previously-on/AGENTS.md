@@ -16,7 +16,7 @@ Build a tight-scope Codex x TwitchCon hackathon demo. Make production-quality ch
 
 - Use Next.js App Router, TypeScript, and Tailwind CSS.
 - Run as one long-lived Node.js 22+ process with `next dev` or `next start`; Docker Compose is for the final run and judges. Do not deploy to Vercel or use serverless functions.
-- Use no Python and no database. Keep runtime state in memory and JSON files under `data/`. Keep generated recap media under `public/recaps/`.
+- Use no Python and no database. Keep runtime state in memory and JSON files under `data/`. Keep generated recap media under `data/recaps/` and serve it through `/api/recaps/[id]`.
 - Use Node's built-in `fetch` and global `WebSocket`. Add a dependency only when it meaningfully saves work; the `openai` npm package is allowed.
 - Support one streamer and one channel. The streamer signs in with their own Twitch account; that same account reads and sends chat.
 - Use `gpt-4o-mini-transcribe` for transcription, `gpt-4o-mini-tts` for speech, and the model specified by `OPENAI_TEXT_MODEL` for text (default `gpt-5.6-luna`).

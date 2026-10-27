@@ -1,0 +1,36 @@
+.broadcast-root{position:fixed;inset:0;overflow:hidden;background:transparent;color:#fff;font-family:Arial,Helvetica,sans-serif;user-select:none}
+.broadcast-viewport{position:absolute;top:0;left:0;width:1920px;height:1080px;transform-origin:top left}
+.broadcast-stage{position:absolute;inset:0;overflow:hidden;isolation:isolate;animation:broadcast-in .22s both}
+.broadcast-wash{position:absolute;inset:0;z-index:-1;background:linear-gradient(115deg,rgba(7,10,23,.96),rgba(13,16,32,.84) 64%,rgba(8,11,22,.55));border-left:14px solid #d9ff43}
+.broadcast-wash:after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,#ffffff03 4px);pointer-events:none}
+.broadcast-bug{position:absolute;top:52px;left:76px;font-size:21px;letter-spacing:4px;font-weight:800;text-transform:uppercase;display:flex;align-items:center;gap:18px}
+.broadcast-bug>span{height:12px;width:12px;background:#d9ff43;box-shadow:0 0 22px #d9ff43}.broadcast-bug b{color:#d9ff43}
+.broadcast-title{position:absolute;left:180px;top:200px;animation:title-slam .48s cubic-bezier(.15,.9,.2,1.05) both}
+.broadcast-eyebrow{font-size:20px;font-weight:800;letter-spacing:6px;color:#d9ff43;margin:0 0 22px}
+.broadcast-title h1{font-size:164px;line-height:.86;font-weight:950;letter-spacing:-8px;margin:24px 0;text-shadow:9px 9px 0 #ffffff0a}
+.broadcast-title em,.broadcast-welcome em{font-style:normal;color:#d9ff43}
+.broadcast-channel{font-size:46px;letter-spacing:9px;text-transform:uppercase;font-weight:800;margin-top:24px}
+.broadcast-rule{display:block;width:600px;height:9px;background:#d9ff43;margin-top:30px;transform-origin:left;animation:rule-grow .6s .2s both}
+.broadcast-story{position:absolute;top:130px;left:250px;right:250px;bottom:110px;display:flex;flex-direction:column;align-items:center;gap:24px}
+.broadcast-frame{width:100%;flex:1;min-height:0;border:1px solid #ffffff45;background:#080c19;box-shadow:20px 20px 0 #0003;position:relative;display:flex;flex-direction:column}
+.broadcast-frame-label{height:50px;padding:15px 24px;font-size:16px;font-weight:800;letter-spacing:4px;background:#d9ff43;color:#101319;display:flex;justify-content:space-between;flex-shrink:0}
+.broadcast-frame iframe{width:100%;flex:1;border:0;min-height:0;background:#080c19}
+.broadcast-moment{position:relative;overflow:hidden;flex:1;padding:80px 75px;display:flex;flex-direction:column;justify-content:center;background:radial-gradient(ellipse at 90% 5%,#6566f14a,transparent 65%),#0c1122;animation:moment-arrive .45s both}
+.broadcast-moment-number{position:absolute;right:30px;top:0;font-size:340px;font-weight:950;line-height:1;color:#ffffff05;letter-spacing:-24px}
+.broadcast-moment h2{font-weight:900;position:relative;font-size:64px;line-height:1.05;letter-spacing:-2px;margin:8px 0 28px;max-width:100%;overflow-wrap:anywhere}
+.broadcast-moment>p:last-child{position:relative;font-size:29px;line-height:1.45;color:#cdd4e8;max-width:1000px;margin:0;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.broadcast-progress{height:5px;background:#ffffff18;flex-shrink:0}.broadcast-progress span{display:block;height:100%;background:#d9ff43;transition:width .18s linear}
+.broadcast-subtitle{background:#080b17ed;border-left:6px solid #d9ff43;padding:21px 32px;width:100%;font-size:32px;line-height:1.3;font-weight:700;text-align:center;min-height:88px;animation:subtitle-arrive .2s both;box-sizing:border-box}
+.broadcast-welcome{position:absolute;left:180px;right:130px;top:195px;animation:title-slam .5s both}.broadcast-welcome h2{font-size:104px;line-height:1.04;letter-spacing:-4px;font-weight:950;margin:25px 0;overflow-wrap:anywhere}.broadcast-welcome em{font-size:clamp(44px,6vw,112px)}
+.broadcast-viewers{font-size:22px;font-weight:800;letter-spacing:5px;display:flex;align-items:center;gap:22px}.broadcast-viewers strong{background:#d9ff43;color:#080c19;font-size:42px;padding:8px 20px;letter-spacing:-1px}
+.broadcast-catchup{font-size:25px;color:#b7c0d6;margin-top:28px}.broadcast-catchup b{color:#fff}
+.broadcast-footer{position:absolute;bottom:38px;left:76px;right:76px;display:flex;justify-content:space-between;font-size:13px;font-weight:700;letter-spacing:4px;color:#8790a9}
+.broadcast-unlock{position:absolute;z-index:5;top:24px;right:30px;background:#d9ff43;border:0;color:#080c19;padding:16px 24px;font-weight:800;cursor:pointer}
+.phase-out{animation:broadcast-out .7s both}
+@keyframes title-slam{from{opacity:0;transform:translateX(-110px) scale(1.08);filter:blur(8px)}to{opacity:1;transform:none;filter:blur(0)}}
+@keyframes rule-grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes moment-arrive{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:none}}
+@keyframes subtitle-arrive{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes broadcast-in{from{opacity:0}to{opacity:1}}
+@keyframes broadcast-out{to{opacity:0;transform:translateY(15px)}}
+@media(prefers-reduced-motion:reduce){.broadcast-stage,.broadcast-title,.broadcast-rule,.broadcast-moment,.broadcast-subtitle,.broadcast-welcome{animation-duration:.01s}}

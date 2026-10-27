@@ -82,6 +82,7 @@ async function requestTokens(params: URLSearchParams): Promise<TokenResponse> {
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: params,
     cache: "no-store",
+    signal: AbortSignal.timeout(8_000),
   });
   if (!response.ok) throw new Error(`Twitch token request failed (HTTP ${response.status})`);
 
@@ -182,7 +183,7 @@ export async function getAccessToken(forceRefresh = false, rejectedToken?: strin
   if (!auth) throw new Error("Twitch is not connected");
   if (rejectedToken && auth.access_token !== rejectedToken) return auth.access_token;
   if (!forceRefresh && auth.expires_at > Date.now() + EXPIRY_BUFFER_MS) return auth.access_token;
-  return (await refreshAccessToken(rejectedToken)).access_token;
+  return (await refreshAccessToken(rejectedToken ?? auth.access_token)).access_token;
 }
 
 export async function helix(pathOrUrl: string, init: RequestInit = {}): Promise<Response> {
@@ -192,11 +193,12 @@ export async function helix(pathOrUrl: string, init: RequestInit = {}): Promise<
     const headers = new Headers(init.headers);
     headers.set("Client-Id", clientId);
     headers.set("Authorization", `Bearer ${accessToken}`);
-    return fetch(url, { ...init, headers, cache: "no-store" });
+    return fetch(url, { ...init, headers, cache: "no-store", signal: init.signal ?? AbortSignal.timeout(10_000) });
   };
 
   const accessToken = await getAccessToken();
   const response = await request(accessToken);
   if (response.status !== 401) return response;
+  await response.body?.cancel().catch(() => undefined);
   return request(await getAccessToken(true, accessToken));
 }

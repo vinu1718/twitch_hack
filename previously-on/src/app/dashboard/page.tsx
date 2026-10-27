@@ -2,6 +2,7 @@ import { readAuth } from "@/lib/twitch/auth";
 import { getSummary } from "@/lib/memory";
 import { getLore } from "@/lib/lore";
 import { DashboardLive } from "./dashboard-live";
+import { HealthBox } from "./health-box";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +29,7 @@ export default async function DashboardPage() {
           </a>
         )}
         </header>
+        <HealthBox />
         {auth && <DashboardLive initialSummary={summary} initialLore={lore} />}
       </div>
     </main>

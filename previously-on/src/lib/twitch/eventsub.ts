@@ -1,6 +1,7 @@
 import { bus, type ChatEvent, type RaidEvent } from "@/lib/bus";
 import { getAccessToken, helix, readAuth } from "./auth";
 import { startChatCommands } from "@/lib/commands";
+import { eventSubHealth, noteChat } from "@/lib/health";
 
 type Session = {
   id?: string;
@@ -42,6 +43,8 @@ class EventSubClient {
   private keepaliveMs = 10_000;
   private retryMs = 1_000;
   private readonly seen = new Map<string, number>();
+  private sessionStartedAt = 0;
+  private subscriptions: string[] = [];
 
   constructor() {
     bus.on("raid", (event) => {
@@ -78,6 +81,11 @@ class EventSubClient {
     this.active = undefined;
     this.replacement = undefined;
     this.reconnectUrl = undefined;
+    this.sessionStartedAt = 0;
+    this.subscriptions = [];
+    eventSubHealth(false);
+    if (old) this.clearHandshake(old);
+    if (replacement) this.clearHandshake(replacement);
     old?.close();
     replacement?.close();
   }
@@ -101,7 +109,7 @@ class EventSubClient {
 
     const handshake = setTimeout(() => {
       console.warn("EventSub welcome timed out");
-      socket.close();
+      this.dropSocket(socket, kind);
     }, HANDSHAKE_TIMEOUT_MS);
     this.handshakeTimers.set(socket, handshake);
 
@@ -121,6 +129,7 @@ class EventSubClient {
   }
 
   private async handleMessage(socket: WebSocket, kind: SocketKind, raw: unknown): Promise<void> {
+    if (socket !== this.active && socket !== this.replacement) return;
     if (typeof raw !== "string") return;
     let message: EventSubMessage;
     try {
@@ -134,6 +143,7 @@ class EventSubClient {
 
     if (socket === this.active) {
       this.lastMessageAt = Date.now();
+      if (this.sessionStartedAt && Date.now() - this.sessionStartedAt >= 30_000) this.retryMs = 1_000;
       this.armWatchdog(socket);
     }
 
@@ -141,18 +151,19 @@ class EventSubClient {
       this.clearHandshake(socket);
       const session = message.payload?.session;
       if (!session?.id) {
-        socket.close();
+        this.dropSocket(socket, kind);
         throw new Error("EventSub welcome omitted its session ID");
       }
       this.keepaliveMs = Math.max(10, session.keepalive_timeout_seconds ?? 10) * 1000;
       this.lastMessageAt = Date.now();
+      this.sessionStartedAt = Date.now();
 
       if (kind === "replacement" && socket === this.replacement) {
         const old = this.active;
         this.active = socket;
         this.replacement = undefined;
         this.reconnectUrl = undefined;
-        this.retryMs = 1_000;
+        eventSubHealth(true, this.sessionStartedAt, this.subscriptions);
         this.armWatchdog(socket);
         old?.close();
         console.info("EventSub reconnected; subscriptions carried over");
@@ -160,10 +171,10 @@ class EventSubClient {
         this.armWatchdog(socket);
         try {
           await this.subscribe(session.id);
-          this.retryMs = 1_000;
+          if (socket === this.active) eventSubHealth(true, this.sessionStartedAt, this.subscriptions);
         } catch {
           console.error("EventSub subscription failed");
-          socket.close();
+          this.dropSocket(socket, kind);
         }
       }
       return;
@@ -186,7 +197,10 @@ class EventSubClient {
     }
     if (type === "revocation") {
       const subscription = message.payload?.subscription;
-      console.warn(`EventSub ${subscription?.type ?? "subscription"} revoked: ${subscription?.status ?? "unknown"}`);
+      const status = ["authorization_revoked", "user_removed", "version_removed"].includes(subscription?.status ?? "") ? subscription!.status : "unknown";
+      console.warn(`EventSub subscription revoked: ${status}`);
+      this.subscriptions = this.subscriptions.filter((name) => name !== subscription?.type);
+      eventSubHealth(this.subscriptions.length > 0, this.sessionStartedAt, this.subscriptions);
       return;
     }
     if (type === "notification") this.handleNotification(message);
@@ -231,6 +245,11 @@ class EventSubClient {
       }),
     );
     if (!results.some(Boolean)) throw new Error("No EventSub subscriptions were accepted");
+    // The CLI mock may not implement chat yet. Live Twitch must accept both subscriptions.
+    if (new URL(endpoint).hostname === "api.twitch.tv" && !results.every(Boolean)) {
+      throw new Error("Required EventSub subscription missing");
+    }
+    this.subscriptions = subscriptions.filter((_, index) => results[index]).map((subscription) => subscription.type);
     console.info(
       `EventSub subscriptions active: ${subscriptions
         .filter((_, index) => results[index])
@@ -269,7 +288,7 @@ class EventSubClient {
         messageId: String(event.message_id ?? ""),
         text: String((event.message as { text?: unknown } | undefined)?.text ?? ""),
       };
-      if (chat.broadcasterUserId && chat.chatterUserId && chat.text) bus.emit("chat", chat);
+      if (chat.broadcasterUserId && chat.chatterUserId && chat.text) { noteChat(); bus.emit("chat", chat); }
     } else if (subscriptionType === "channel.raid") {
       const raid: RaidEvent = {
         fromBroadcasterUserId: String(event.from_broadcaster_user_id ?? ""),
@@ -290,7 +309,7 @@ class EventSubClient {
       if (socket !== this.active) return;
       if (Date.now() - this.lastMessageAt >= this.keepaliveMs + KEEPALIVE_GRACE_MS) {
         console.warn("EventSub keepalive timed out; reconnecting");
-        socket.close();
+        this.dropSocket(socket, "fresh");
       } else {
         this.armWatchdog(socket);
       }
@@ -323,17 +342,20 @@ class EventSubClient {
         this.reset();
         this.scheduleFreshRetry();
       }
-    } else if (kind === "fresh" && socket === this.active) {
+    } else if (socket === this.active) {
       this.active = undefined;
+      this.sessionStartedAt = 0;
+      eventSubHealth(false);
       if (this.watchdogTimer) clearTimeout(this.watchdogTimer);
       this.watchdogTimer = undefined;
       if (!this.replacement && !this.retryTimer) this.scheduleFreshRetry();
-    } else if (kind === "replacement" && socket === this.active) {
-      this.active = undefined;
-      if (this.watchdogTimer) clearTimeout(this.watchdogTimer);
-      this.watchdogTimer = undefined;
-      this.scheduleFreshRetry();
     }
+  }
+
+  private dropSocket(socket: WebSocket, kind: SocketKind): void {
+    // A dead TCP connection may never deliver close. Detach and schedule now.
+    this.handleClose(socket, kind);
+    try { socket.close(); } catch { /* Already gone. */ }
   }
 
   private scheduleFreshRetry(): void {

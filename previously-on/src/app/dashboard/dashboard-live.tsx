@@ -5,12 +5,17 @@ import type { StreamSummary } from "@/lib/memory";
 import type { LoreEntry } from "@/lib/lore";
 import { MicRecorder } from "./mic-recorder";
 import { LoreEditor } from "./lore-editor";
+import { ClientTime } from "./client-time";
+import { RaidControls } from "./raid-controls";
+import type { BriefingEvent, RecapStatus } from "@/lib/recap-types";
 
 export function DashboardLive({ initialSummary, initialLore }: { initialSummary: StreamSummary; initialLore: LoreEntry[] }) {
   const [summary, setSummary] = useState(initialSummary);
   const [lore, setLore] = useState(initialLore);
   const [summarizing, setSummarizing] = useState(false);
   const [message, setMessage] = useState("");
+  const [briefing, setBriefing] = useState<BriefingEvent | null>(null);
+  const [recapStatus, setRecapStatus] = useState<RecapStatus | null>(null);
 
   useEffect(() => {
     const source = new EventSource("/api/stream");
@@ -22,6 +27,14 @@ export function DashboardLive({ initialSummary, initialLore }: { initialSummary:
       try { setLore(JSON.parse(event.data) as LoreEntry[]); } catch { /* ignore malformed event */ }
     };
     source.addEventListener("lore", onLore);
+    const onBriefing = (event: MessageEvent) => {
+      try { setBriefing(JSON.parse(event.data) as BriefingEvent); } catch { /* ignore malformed event */ }
+    };
+    const onStatus = (event: MessageEvent) => {
+      try { setRecapStatus(JSON.parse(event.data) as RecapStatus); } catch { /* ignore malformed event */ }
+    };
+    source.addEventListener("briefing", onBriefing);
+    source.addEventListener("recap-status", onStatus);
     return () => {
       source.removeEventListener("summary", onSummary);
       source.removeEventListener("lore", onLore);
@@ -48,6 +61,7 @@ export function DashboardLive({ initialSummary, initialLore }: { initialSummary:
   return (
     <div className="space-y-6">
       <MicRecorder />
+      <RaidControls briefing={briefing} status={recapStatus} />
       <section className="rounded-xl border border-slate-700 bg-slate-900 p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-lg font-semibold">Live stream memory</h2>
@@ -72,7 +86,7 @@ export function DashboardLive({ initialSummary, initialLore }: { initialSummary:
                 <li key={`${moment.t}-${index}`}>
                   <p className="font-medium text-violet-200">{moment.title}</p>
                   <p className="text-sm text-slate-300">{moment.detail}</p>
-                  <time className="text-xs text-slate-500">{new Date(moment.t).toLocaleTimeString()}</time>
+                  <ClientTime value={moment.t} />
                 </li>
               ))}
             </ul>

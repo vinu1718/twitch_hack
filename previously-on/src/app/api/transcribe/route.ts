@@ -31,7 +31,7 @@ export async function POST(request: Request): Promise<Response> {
     const transcription = await openai().audio.transcriptions.create({
       file: audio,
       model: "gpt-4o-mini-transcribe",
-    });
+    }, { timeout: 30_000, maxRetries: 0 });
     const text = transcription.text?.trim() ?? "";
     if (!usefulText(text)) return Response.json({ accepted: false });
     await addTranscript(text);
