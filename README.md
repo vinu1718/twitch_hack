@@ -76,9 +76,9 @@ Run `npm test`, `npm run lint`, and `npx tsc --noEmit` for local checks. Restart
 
 ## Interface and motion
 
-`/` is the four-part demo opener: arrival, memory, raid, and chat commands. Anton and Geist are served locally through `next/font`; shared colors, spacing, focus styles, and tactile controls live in `src/app/globals.css`. The acid yellow accent is shared across all three pages.
+`/` is the four-part demo opener: arrival, memory, raid, and chat commands. Inter is served locally through `next/font`; Anton is reserved for the overlay title and raider name; shared colors, spacing, focus styles, and tactile controls live in `src/app/globals.css`. The Twitch-purple accent is shared across all three pages; this independent project is not affiliated with Twitch.
 
-The overlay uses one anime.js v4 timeline, scrubbed by audio progress during the story. Subtitles are 46px on the native 1920×1080 canvas. The story and welcome panels stay left of the gameplay center. Main narration is fitted into a 14 second story window and welcome audio into two seconds with pitch-preserving browser playback; ordinary playback is about 18 seconds, or about 21 seconds with the full late-welcome wait. Browser autoplay permission and unavailable media can delay playback. When idle, no recap subtree, iframe, canvas, or animation is mounted.
+The overlay uses one anime.js v4 timeline, scrubbed by audio progress during the story. Subtitles are 46px on the native 1920×1080 canvas. The story and welcome panels stay left of the gameplay center. Main narration is fitted into a 14 second story window and welcome audio toward four seconds with playback capped at 1.15× to preserve a gentle delivery; ordinary playback is about 20 seconds, or about 23 seconds with the full late-welcome wait. Browser autoplay permission and unavailable media can delay playback. When idle, no recap subtree, iframe, canvas, or animation is mounted.
 
 ShaderGradient and its Three.js dependencies are dynamically loaded on the landing hero only, and unmounted offscreen. Lenis and scroll-linked motion are also landing-only. Reduced-motion preferences disable the gradient, smooth scroll, scramble, and large translations. React Bits source components are documented in `src/components/REACT_BITS.md`.
 
@@ -92,3 +92,17 @@ Leave these unset for the designed static fallbacks. These public variables are 
 ### Light and dark mode
 
 Use the theme button in the landing page or dashboard header. The first visit follows your system preference; an explicit choice is saved in this browser and synchronized across tabs. Preference loading runs before paint to avoid a theme flash. The OBS overlay and landing's broadcast preview retain their dark broadcast palette; the idle overlay remains fully transparent in either mode.
+
+### Mid-stream view and safe overlay preview
+
+The dashboard's default view is three status cards, microphone capture, and **Right now**. Moments, running bits, saved lore, raid testing, and debugging details are under collapsed **Memory & lore**, **Test**, and **Details** disclosures. Connection/subscription failures appear in red on the Twitch card. Routine token expiry is hidden: the existing health endpoint does not expose a token-refresh failure reason, so the UI does not infer one from an expired timestamp.
+
+In a regular browser, the idle overlay shows a **Play preview** button. `/overlay?preview` starts the same preview automatically; autoplay restrictions may require the audio-enable button. The preview reads `GET /api/recaps/standby`, uses existing narration when available or text cards from current memory, and welcomes a sample raider. It generates no new audio, sends no chat, emits no raid, and does not enter or acknowledge the server raid queue. A real raid interrupts a local preview. In OBS (`window.obsstudio` is defined), the idle hint is absent and the source stays transparent.
+
+Narration uses the `shimmer` voice on `gpt-4o-mini-tts`, with soft, warm storytelling and welcome instructions. Preview and live raids share the prepared narrator audio; playing a preview never generates new speech. If an overlay tab already has an older preview loaded, play the preview again to load the refreshed audio. See [OpenAI's voice options](https://developers.openai.com/api/docs/guides/text-to-speech#voice-options).
+
+The last successful summary time is stored as `lastSummaryAt` in `data/memory.json` and restored into health on startup. Older memory files without a timestamp retain their summary and display “Saved summary” until the next successful update; no timestamp is guessed. All three dashboard status cards render immediately with neutral checking labels before health data arrives.
+
+Development reloads now update the recap singleton's methods while preserving its standby, active raid, queue, and existing bus listeners. Both main and welcome speech use the shared `shimmer` narrator profile with soft, light delivery. The Test controls open above the footer instead of shrinking the live workspace, dismiss with Escape/outside click, and close automatically after a successful simulation. The mic control never needs its own scroll area; unusually long memory text can still scroll when necessary.
+
+Welcome audio is capped at 1.15× playback speed. It is no longer forced into a two-second slot, which made a normal four-to-five second welcome sound rushed.
