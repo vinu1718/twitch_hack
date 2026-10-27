@@ -15,7 +15,6 @@ export function HealthBox({
   offline: boolean;
 }) {
   const now = health?.serverTime ?? 0;
-  const expiry = health?.tokenExpiresAt;
   const rows = health
     ? [
         [
@@ -31,12 +30,6 @@ export function HealthBox({
           `${ago(health.lastSummaryAt, now)} · ${health.summaryState}`,
         ],
         ["Summary cadence", health.micRecording ? "Every 60s" : "Every 120s"],
-        [
-          "Token expiry",
-          expiry
-            ? `${new Date(expiry).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} · ${expiry <= now ? "refresh due" : `${Math.ceil((expiry - now) / 60_000)}m left`}`
-            : "Connect Twitch",
-        ],
       ]
     : [];
   return (

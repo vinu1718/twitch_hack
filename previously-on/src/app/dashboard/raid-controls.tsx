@@ -1,14 +1,6 @@
 "use client";
 import { useState } from "react";
-import type { BriefingEvent, RecapStatus } from "@/lib/recap-types";
-export function RaidControls({
-  status,
-  disabled = false,
-}: {
-  briefing: BriefingEvent | null;
-  status: RecapStatus | null;
-  disabled?: boolean;
-}) {
+export function RaidControls({ disabled = false }: { disabled?: boolean }) {
   const [login, setLogin] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -37,10 +29,9 @@ export function RaidControls({
   return (
     <section className="panel raid-test">
       <div className="panel-heading">
-        <h2>Rehearse the entrance.</h2>
+        <h2>Test a raid</h2>
         <span aria-hidden="true">↙</span>
       </div>
-      <p className="muted">Run the real raid flow with a channel you know.</p>
       <form onSubmit={simulate}>
         <label htmlFor="raid-login" className="field-label">
           Twitch channel login
@@ -57,10 +48,20 @@ export function RaidControls({
             disabled={disabled || busy}
           />
         </div>
-        <button disabled={busy || disabled} className="button-quiet">
-          {busy ? "Sending raid…" : "Simulate raid"}
-          <span aria-hidden="true">↗</span>
-        </button>
+        <div className="test-actions">
+          <button disabled={busy || disabled} className="button-quiet">
+            {busy ? "Sending raid…" : "Simulate raid"}
+            <span aria-hidden="true">↗</span>
+          </button>
+          <a
+            className="button-quiet"
+            href="/overlay?preview"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Preview overlay ↗
+          </a>
+        </div>
       </form>
       {message && (
         <p role="status" className={`feedback ${failed ? "error" : ""}`}>
@@ -68,10 +69,8 @@ export function RaidControls({
         </p>
       )}
       <p className="fine-print">
-        {status?.state === "ready"
-          ? "Standby narration is ready."
-          : "No narration yet? Text cards still tell the story."}{" "}
-        This sends a welcome to your channel chat. Voice is AI-generated.
+        Simulate raid sends a welcome to chat. Preview overlay only plays in
+        your browser. Voice is AI-generated.
       </p>
     </section>
   );

@@ -23,6 +23,10 @@ class Recaps {
   private cleanupQueue: Promise<void> = Promise.resolve();
   status: RecapStatus = { state: "building", message: "Waiting for stream memory" };
 
+  static standbySnapshot(service?: Recaps): PreparedRecap | null {
+    return service?.standby ? structuredClone(service.standby) : null;
+  }
+
   constructor() {
     bus.on("summary", (summary) => { this.lastSummary = structuredClone(summary); void this.prepare(summary); });
     bus.on("raid", (raid) => {
@@ -184,4 +188,8 @@ export function startRecaps(): void {
 }
 export function finishRecap(id: string): void { recaps().finish(id); }
 export function getRecapStatus(): RecapStatus { return recaps().status; }
+// Read-only: inspecting a standby must never initialize the raid service or enqueue playback.
+export function getStandbyRecap(): PreparedRecap | null {
+  return Recaps.standbySnapshot((globalThis as RecapGlobal).__previouslyOnRecaps);
+}
 export function prepareStandby(summary: StreamSummary): void { void recaps().prepare(summary); }

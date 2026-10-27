@@ -184,21 +184,9 @@ export function MicRecorder({
 
   return (
     <section
+      aria-label="Microphone capture"
       className={`panel microphone-panel ${capture === "recording" ? "mic-is-recording" : ""}`}
     >
-      <div className="panel-heading">
-        <div>
-          <h2>Capture your voice.</h2>
-        </div>
-        <span className="mic-symbol" aria-hidden="true">
-          ◉
-        </span>
-      </div>
-      <p className="muted">
-        Your mic + your chat.
-        <br />
-        One living stream memory.
-      </p>
       <div className="mic-waveform" aria-hidden="true">
         {Array.from({ length: 30 }, (_, i) => (
           <i key={i} style={{ height: `${15 + ((i * 31) % 70)}%` }} />
@@ -217,20 +205,17 @@ export function MicRecorder({
             ? "Starting microphone…"
             : "Start recording"}
       </button>
-      <p role="status" className="mic-status">
-        {capture === "recording"
-          ? "Recording"
-          : capture === "starting"
-            ? "Starting"
-            : "Stopped"}
-        {upload === "uploading"
-          ? " · Uploading"
-          : upload === "ok"
-            ? " · Last chunk ok"
-            : upload === "error"
-              ? " · Error"
-              : ""}
-      </p>
+      {(capture === "starting" ||
+        upload === "uploading" ||
+        upload === "error") && (
+        <p role="status" className="mic-status">
+          {capture === "starting"
+            ? "Starting microphone…"
+            : upload === "uploading"
+              ? "Uploading chunk…"
+              : "Chunk upload failed"}
+        </p>
+      )}
       {error && <p className="feedback error">{error}</p>}
     </section>
   );

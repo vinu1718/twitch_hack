@@ -95,9 +95,6 @@ html:has(.broadcast-root) {
   background: #eaf0d8;
   border-color: #7b943b;
 }
-:root[data-theme="light"] .mic-button.stop-button {
-  color: var(--accent-fill);
-}
 @media (max-width: 1000px) {
   .site-nav .nav-note {
     display: none;

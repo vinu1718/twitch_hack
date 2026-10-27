@@ -8,6 +8,7 @@ export function useOverlaySequence(
   recap: RecapEvent | null,
   welcomes: RefObject<Map<string, WelcomeEvent>>,
   complete: (id: string) => void,
+  previewOnly = false,
 ) {
   const audio = useRef<HTMLAudioElement>(null);
   const stage = useRef<HTMLDivElement>(null);
@@ -183,8 +184,10 @@ export function useOverlaySequence(
       setBlocked(false);
       setPhase("welcome");
       await drive(15200, 15800, reduced ? 150 : 220);
+      if (previewOnly) await delay(1_800);
       const deadline = Date.now() + 3_000;
       while (
+        !previewOnly &&
         !welcomeEvents.has(current.raidId) &&
         Date.now() < deadline &&
         !signal.aborted
@@ -206,14 +209,15 @@ export function useOverlaySequence(
       element.removeAttribute("src");
       element.load();
       welcomeEvents.delete(current.raidId);
-      void fetch("/api/recaps/playback", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ raidId: current.raidId }),
-        keepalive: true,
-      }).catch(() => undefined);
+      if (!previewOnly)
+        void fetch("/api/recaps/playback", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ raidId: current.raidId }),
+          keepalive: true,
+        }).catch(() => undefined);
     };
-  }, [recap, welcomes, complete]);
+  }, [recap, welcomes, complete, previewOnly]);
   function unlock() {
     const element = audio.current;
     if (!element) return;

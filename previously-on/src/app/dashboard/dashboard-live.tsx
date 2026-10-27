@@ -12,6 +12,7 @@ import { ClientTime } from "./client-time";
 import { RaidControls } from "./raid-controls";
 import { HealthBox } from "./health-box";
 import { useHealth } from "./use-health";
+import { elapsed, connectionIssue } from "./status-text";
 
 export function DashboardLive({
   initialSummary,
@@ -88,7 +89,9 @@ export function DashboardLive({
       setSummarizing(false);
     }
   }
-  const connected = Boolean(login && health?.eventSub.connected && !offline);
+  const issue = login ? connectionIssue(health, offline) : "";
+  const connected = Boolean(login && health && !issue);
+  const now = health?.serverTime ?? 0;
   const ready = recapStatus?.state === "ready";
   return (
     <main className="dashboard-shell" id="dashboard-main">
@@ -96,32 +99,26 @@ export function DashboardLive({
         <Link prefetch={false} href="/" className="brand">
           <span className="brand-mark">»</span> Previously On
         </Link>
-        <span className="eyebrow muted">CONTROL ROOM</span>
         <div className="nav-actions">
-          <ThemeToggle />
+          <ThemeToggle iconOnly />
           <div className="channel-chip">
             <span className="status-dot" />
             {login ? `@${login}` : "No channel connected"}
           </div>
         </div>
-      </header>
-      <div className="dashboard-headline">
-        <div>
-          <p className="eyebrow muted">YOUR STREAM. ALL CAUGHT UP.</p>
-          <h1>Keep the story going.</h1>
-        </div>
         <a
-          className="button-quiet"
+          className="button-quiet overlay-link"
           href="/overlay"
           target="_blank"
           rel="noreferrer"
+          title="OBS autoplays audio. In a normal browser tab, click once to enable narrator audio."
         >
           Open OBS overlay <span aria-hidden="true">↗</span>
         </a>
-      </div>
+      </header>
       <section className="status-rail" aria-label="Stream status">
         <AnimatedContent
-          className={`status-card ${connected ? "is-good" : login ? "is-warn" : "is-off"}`}
+          className={`status-card ${issue ? "is-error" : connected ? "is-good" : "is-off"}`}
         >
           <span className="eyebrow">
             <span className="status-dot" /> TWITCH CONNECTION
@@ -129,25 +126,26 @@ export function DashboardLive({
           <strong>
             {connected
               ? "Connected"
-              : login
-                ? health
-                  ? "Reconnecting"
-                  : "Checking…"
-                : "Not connected"}
+              : !login
+                ? "Not connected"
+                : issue
+                  ? "Needs attention"
+                  : "Checking…"}
           </strong>
           <span>
-            {connected ? (
-              `Chat + raids for @${login}`
-            ) : login ? (
-              "Waiting for EventSub"
+            {!login ? (
+              <a href="/api/auth/login">Connect Twitch ↗</a>
             ) : (
-              <a href="/api/auth/login">Connect your Twitch account ↗</a>
+              issue ||
+              (health
+                ? `Connected · session ${elapsed(health.eventSub.sessionStartedAt, now, false)}`
+                : "Checking connection…")
             )}
           </span>
         </AnimatedContent>
         <AnimatedContent
           delay={50}
-          className={`status-card ${recording ? "is-recording" : "is-off"}`}
+          className={`status-card ${recording ? "is-good" : "is-off"}`}
         >
           <span className="eyebrow">
             <span className="status-dot" /> MICROPHONE
@@ -155,8 +153,10 @@ export function DashboardLive({
           <strong>{recording ? "Recording" : "Standing by"}</strong>
           <span>
             {recording
-              ? "Your voice is becoming stream memory"
-              : "Start capture when you’re ready"}
+              ? health?.lastTranscriptAt
+                ? `Last chunk ${elapsed(health.lastTranscriptAt, now)} ago`
+                : "Waiting for first chunk"
+              : "Mic is off"}
           </span>
         </AnimatedContent>
         <AnimatedContent
@@ -177,7 +177,7 @@ export function DashboardLive({
           </strong>
           <span>
             {ready
-              ? "Narration prepared. Let them raid."
+              ? "Ready for the next raid"
               : recapStatus?.state === "error"
                 ? "Your stream story can still play"
                 : "Built from your next stream summary"}
@@ -233,39 +233,72 @@ export function DashboardLive({
               </a>
             </section>
           )}
-          <section className="panel setup-panel">
-            <span className="eyebrow muted">BROWSER SOURCE</span>
-            <h2>Ready for OBS.</h2>
-            <p>
-              1920 × 1080. Transparent between raids. Add the overlay above
-              gameplay.
-            </p>
-            <a
-              className="button-quiet"
-              href="/overlay"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Open overlay ↗
-            </a>
-            <p className="fine-print">
-              In a browser tab, click once to enable narrator audio.
-            </p>
-          </section>
-          <div className="control-room-footer eyebrow muted">
-            LIVE STORIES.
-            <br />
-            SHARED MEMORIES.
-          </div>
         </aside>
-        <section className="panel memory-panel">
-          <div className="memory-toolbar">
+        <section
+          className="panel current-memory scroll-region"
+          aria-label="Current stream memory"
+          tabIndex={0}
+        >
+          <div className="now-block">
+            <h1 className="eyebrow accent">RIGHT NOW</h1>
+            <p>{summary.now || "Your story starts here."}</p>
+            {!summary.now && (
+              <span className="muted">Start the mic or wait for chat.</span>
+            )}
+            <div className="summary-actions">
+              <button
+                className="button-quiet"
+                disabled={summarizing || !login}
+                onClick={summarize}
+              >
+                {summarizing || health?.summaryState === "running"
+                  ? "Updating memory…"
+                  : "Summarize now"}
+                <span aria-hidden="true">↻</span>
+              </button>
+              <span className="muted">
+                {health?.lastSummaryAt
+                  ? `${health.summaryState === "error" ? "Last attempt" : health.summaryState === "running" ? "Started" : "Updated"} ${elapsed(health.lastSummaryAt, now)} ago`
+                  : "No summary run yet"}
+              </span>
+            </div>
+            {health?.summaryState === "error" && (
+              <p role="status" className="feedback error">
+                Last summary failed. Your previous memory is still here. Try
+                again.
+              </p>
+            )}
+            {message && (
+              <p
+                role="status"
+                className={`feedback ${summaryError ? "error" : ""}`}
+              >
+                {message}
+              </p>
+            )}
+          </div>
+        </section>
+      </div>
+      <footer className="dashboard-tools">
+        <details className="tool-disclosure">
+          <summary>
+            Memory &amp; lore{" "}
+            <span className="muted">
+              {summary.moments.length}{" "}
+              {summary.moments.length === 1 ? "moment" : "moments"}
+            </span>
+          </summary>
+          <div
+            className="tool-content scroll-region"
+            tabIndex={0}
+            aria-label="Memory and lore details"
+          >
             <div className="view-tabs" role="group" aria-label="Memory view">
               <button
                 aria-pressed={tab === "memory"}
                 onClick={() => setTab("memory")}
               >
-                Stream memory
+                Moments &amp; running bits
               </button>
               <button
                 aria-pressed={tab === "lore"}
@@ -274,47 +307,14 @@ export function DashboardLive({
                 Saved lore <span>{lore.length}</span>
               </button>
             </div>
-            <span className="eyebrow muted">LIVE</span>
-          </div>
-          <div
-            className="memory-scroll scroll-region"
-            tabIndex={0}
-            aria-label={
-              tab === "memory" ? "Stream memory details" : "Lore editor"
-            }
-          >
             {tab === "memory" ? (
               <>
-                <div className="now-block">
-                  <span className="eyebrow accent">RIGHT NOW</span>
-                  <p>{summary.now || "Your story starts here."}</p>
-                  {!summary.now && (
-                    <span className="muted">
-                      Start the mic or wait for chat. The good moments will find
-                      their way here.
-                    </span>
-                  )}
-                  <button
-                    className="button-quiet"
-                    disabled={summarizing || !login}
-                    onClick={summarize}
-                  >
-                    {summarizing ? "Updating memory…" : "Summarize now"}
-                    <span aria-hidden="true">↻</span>
-                  </button>
-                  {message && (
-                    <p
-                      role="status"
-                      className={`feedback ${summaryError ? "error" : ""}`}
-                    >
-                      {message}
-                    </p>
-                  )}
-                </div>
+                {" "}
                 <div className="moments-heading">
                   <h2>Moments worth remembering</h2>
                   <span className="tiny-label muted">
-                    {String(summary.moments.length).padStart(2, "0")} / 08
+                    {summary.moments.length}{" "}
+                    {summary.moments.length === 1 ? "moment" : "moments"}
                   </span>
                 </div>
                 {summary.moments.length ? (
@@ -367,20 +367,24 @@ export function DashboardLive({
               <LoreEditor entries={lore} onChange={setLore} />
             )}
           </div>
-        </section>
-        <aside
-          className="dashboard-sidebar scroll-region"
-          aria-label="Health and raid test"
-          tabIndex={0}
-        >
-          <HealthBox health={health} offline={offline} />
-          <RaidControls
-            briefing={null}
-            status={recapStatus}
-            disabled={!login}
-          />
-        </aside>
-      </div>
+        </details>
+        <details className="tool-disclosure">
+          <summary>Test</summary>
+          <div className="tool-content">
+            <RaidControls disabled={!login} />
+          </div>
+        </details>
+        <details className="tool-disclosure">
+          <summary>Details</summary>
+          <div
+            className="tool-content scroll-region"
+            tabIndex={0}
+            aria-label="Debugging details"
+          >
+            <HealthBox health={health} offline={offline} />
+          </div>
+        </details>
+      </footer>
     </main>
   );
 }

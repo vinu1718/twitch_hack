@@ -54,3 +54,11 @@ Documentation checked before integration: [anime.js timeline](https://animejs.co
 Added a shared, labeled theme control to both headers, with a system default, persistent browser preference, cross-tab synchronization, and pre-paint initialization. Light mode uses warm white surfaces, dark ink, accessible olive accent text, and the original yellow button fills. Status and telemetry colors are adjusted for light surfaces. The overlay retains its dark tokens and transparent background regardless of UI theme.
 
 Reviewed [light dashboard](design-review/dashboard-light.png) and [light landing](design-review/landing-light.png), verified reload persistence and cross-tab switching, and inspected the idle overlay in light mode: transparent background, original dark ink/white text tokens, and zero canvases.
+
+## Mid-stream simplification
+
+The default dashboard now shows the three status cards, a large mic button/waveform, and current AI context. Removed the hero, control-room label, setup card, taglines, mic promotional copy, and permanent health sidebar. Memory/lore, tests, and debugging are collapsed at the bottom. Moment counts are actual counts. The dashboard theme control is icon-only, and browser audio guidance lives on the overlay link tooltip. Connection and missing required subscription failures turn the Twitch card red; mic and summary recency sit next to their respective controls. Token expiry is hidden; the existing health payload does not expose refresh-failure details.
+
+The overlay retains only the small AI narration label in its footer. Browser tabs get a static idle hint with Play preview; OBS gets no idle hint. The new read-only standby GET and its snapshot accessor are the only server changes. Preview audio is copied into a browser blob so normal standby cleanup cannot remove it mid-playback. Preview playback is separate from the real queue, yields to real raids, and never sends a playback acknowledgment.
+
+Screenshots: [trimmed dashboard](design-review/dashboard-trimmed.png), [idle browser overlay](design-review/overlay-idle.png). Tests cover cold/warm standby reads, snapshot isolation, fallback and failure responses, credentials exclusion, missing subscriptions, and preview cleanup skipping the raid completion endpoint.

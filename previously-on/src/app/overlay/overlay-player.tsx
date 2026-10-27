@@ -1,26 +1,46 @@
 "use client";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import type { RecapEvent, WelcomeEvent } from "@/lib/recap-types";
 import DecryptedText from "@/components/DecryptedText";
 import SplitText from "@/components/SplitText";
 import { useOverlaySequence } from "./use-overlay-sequence";
+import { useOverlayPreview } from "./use-overlay-preview";
+const subscribeToEnvironment = () => () => {};
 export function OverlayPlayer() {
   const [queue, setQueue] = useState<RecapEvent[]>([]);
-  const recap = queue[0] ?? null;
+  const { preview, loading, error, play, cancel } = useOverlayPreview();
+  const recap = queue[0] ?? preview;
+  const browserTab = useSyncExternalStore(
+    subscribeToEnvironment,
+    () => (window as Window & { obsstudio?: unknown }).obsstudio === undefined,
+    () => false,
+  );
   const [parent, setParent] = useState("localhost");
   const [scale, setScale] = useState(1);
   const welcomes = useRef(new Map<string, WelcomeEvent>());
   const seen = useRef(new Set<string>());
   const complete = useCallback(
-    (id: string) =>
-      setQueue((pending) => pending.filter((item) => item.raidId !== id)),
-    [],
+    (id: string) => {
+      if (id.startsWith("preview-")) cancel();
+      else setQueue((pending) => pending.filter((item) => item.raidId !== id));
+    },
+    [cancel],
   );
   const { audio, stage, phase, progress, blocked, unlock } = useOverlaySequence(
     recap,
     welcomes,
     complete,
+    recap !== null && recap === preview,
   );
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).has("preview")) void play();
+  }, [play]);
   useEffect(() => {
     const resize = () => {
       setScale(Math.min(window.innerWidth / 1920, window.innerHeight / 1080));
@@ -42,6 +62,7 @@ export function OverlayPlayer() {
         seen.current.add(next.raidId);
         if (seen.current.size > 500)
           seen.current.delete(seen.current.values().next().value!);
+        cancel(); // A real raid always takes priority over a local preview.
         setQueue((pending) => [...pending, next]);
       } catch {}
     };
@@ -61,7 +82,7 @@ export function OverlayPlayer() {
       window.removeEventListener("resize", resize);
       source.close();
     };
-  }, []);
+  }, [cancel]);
   const total =
     recap?.segments.reduce((sum, segment) => sum + segment.text.length, 0) || 1;
   let consumed = 0;
@@ -87,6 +108,26 @@ export function OverlayPlayer() {
       aria-label="Previously On OBS overlay"
     >
       <audio ref={audio} preload="auto" />
+      {!recap && browserTab && (
+        <section className="overlay-idle" aria-label="Overlay preview">
+          <span className="brand-mark" aria-hidden="true">
+            »
+          </span>
+          <p>Overlay is idle and transparent in OBS. Waiting for a raid.</p>
+          <button
+            className="tactile"
+            disabled={loading}
+            onClick={() => void play()}
+          >
+            {loading ? "Loading preview…" : "Play preview"}
+          </button>
+          {error && (
+            <p role="alert" className="overlay-preview-error">
+              {error}
+            </p>
+          )}
+        </section>
+      )}
       {recap && (
         <div
           className="broadcast-viewport"
@@ -174,14 +215,6 @@ export function OverlayPlayer() {
                   <SplitText key={segmentIndex} text={segment.text} />
                 )}
               </div>
-              <div className="broadcast-story-counter">
-                <span className="accent">»</span>
-                <span>
-                  YOU’RE CATCHING UP.
-                  <br />
-                  THE STREAM KEEPS GOING.
-                </span>
-              </div>
             </section>
             <section
               className="broadcast-welcome"
@@ -216,8 +249,7 @@ export function OverlayPlayer() {
               </p>
             </section>
             <div className="broadcast-footer">
-              <span>LIVE STORIES. SHARED MEMORIES.</span>
-              <span>AI NARRATION / PREVIOUSLY ON</span>
+              <span>AI NARRATION</span>
             </div>
             {blocked && (
               <button className="broadcast-unlock tactile" onClick={unlock}>

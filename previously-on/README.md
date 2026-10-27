@@ -92,3 +92,9 @@ Leave these unset for the designed static fallbacks. These public variables are 
 ### Light and dark mode
 
 Use the theme button in the landing page or dashboard header. The first visit follows your system preference; an explicit choice is saved in this browser and synchronized across tabs. Preference loading runs before paint to avoid a theme flash. The OBS overlay and landing's broadcast preview retain their dark broadcast palette; the idle overlay remains fully transparent in either mode.
+
+### Mid-stream view and safe overlay preview
+
+The dashboard's default view is three status cards, microphone capture, and **Right now**. Moments, running bits, saved lore, raid testing, and debugging details are under collapsed **Memory & lore**, **Test**, and **Details** disclosures. Connection/subscription failures appear in red on the Twitch card. Routine token expiry is hidden: the existing health endpoint does not expose a token-refresh failure reason, so the UI does not infer one from an expired timestamp.
+
+In a regular browser, the idle overlay shows a **Play preview** button. `/overlay?preview` starts the same preview automatically; autoplay restrictions may require the audio-enable button. The preview reads `GET /api/recaps/standby`, uses existing narration when available or text cards from current memory, and welcomes a sample raider. It generates no new audio, sends no chat, emits no raid, and does not enter or acknowledge the server raid queue. A real raid interrupts a local preview. In OBS (`window.obsstudio` is defined), the idle hint is absent and the source stays transparent.
